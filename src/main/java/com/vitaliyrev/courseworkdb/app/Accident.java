@@ -1,4 +1,4 @@
-package app;
+package com.vitaliyrev.courseworkdb.app;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;

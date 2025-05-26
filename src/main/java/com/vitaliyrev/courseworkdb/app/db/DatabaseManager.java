@@ -1,9 +1,9 @@
-package app.db;
+package com.vitaliyrev.courseworkdb.app.db;
 
-import app.Accident;
-import app.Brigade;
-import app.Client;
-import app.Master;
+import com.vitaliyrev.courseworkdb.app.Accident;
+import com.vitaliyrev.courseworkdb.app.Brigade;
+import com.vitaliyrev.courseworkdb.app.Client;
+import com.vitaliyrev.courseworkdb.app.Master;
 
 import java.sql.*;
 import java.util.*;

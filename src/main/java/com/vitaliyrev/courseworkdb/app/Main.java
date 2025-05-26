@@ -1,4 +1,4 @@
-package app;
+package com.vitaliyrev.courseworkdb.app;
 
 import javax.swing.*;
 import java.io.*;
@@ -6,6 +6,8 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.SimpleDateFormat;
 import java.util.*;
+
+import com.vitaliyrev.courseworkdb.app.*;
 
 // Головний клас
 public class Main {

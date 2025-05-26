@@ -1,4 +1,4 @@
-package app;
+package com.vitaliyrev.courseworkdb.app;
 
 // Клас "Майстер"
 public class Master extends Entity {

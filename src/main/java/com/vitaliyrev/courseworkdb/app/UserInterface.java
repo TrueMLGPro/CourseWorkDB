@@ -1,4 +1,4 @@
-package app;
+package com.vitaliyrev.courseworkdb.app;
 
 import javax.swing.*;
 import java.awt.*;
