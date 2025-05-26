@@ -5,19 +5,16 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="95a69f16-a790-40cd-8ee2-a8de1e3cf5c5" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.gitignore" beforeDir="false" afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/.gitignore" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/modules.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/vcs.xml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/CourseWorkDB.iml" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/Accident.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/Brigade.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/Client.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/Entity.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/Main.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/Master.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/app/UserInterface.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/gradle.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/gradle.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/vitaliyrev/courseworkdb/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/vitaliyrev/courseworkdb/app/Main.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/vitaliyrev/courseworkdb/app/Accident.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/vitaliyrev/courseworkdb/app/Accident.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/vitaliyrev/courseworkdb/app/Brigade.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/vitaliyrev/courseworkdb/app/Brigade.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/vitaliyrev/courseworkdb/app/Client.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/vitaliyrev/courseworkdb/app/Client.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/vitaliyrev/courseworkdb/app/Entity.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/vitaliyrev/courseworkdb/app/Entity.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/vitaliyrev/courseworkdb/app/Master.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/vitaliyrev/courseworkdb/app/Master.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/vitaliyrev/courseworkdb/app/UserInterface.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/vitaliyrev/courseworkdb/app/UserInterface.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/vitaliyrev/courseworkdb/app/db/DatabaseManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/vitaliyrev/courseworkdb/app/db/DatabaseManager.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -59,6 +56,8 @@
   </component>
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
+    "Application.Main.executor": "Run",
+    "Gradle.CourseWorkDB [:com.vitaliyrev.courseworkdb.app.Main.main()].executor": "Run",
     "Gradle.D:/IDEA_Projects/Polytech/Databases/CourseWorkDB/build.gradle.executor": "Run",
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "git-widget-placeholder": "db",

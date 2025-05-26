@@ -1,4 +1,4 @@
-package app;
+package com.vitaliyrev.courseworkdb.app;
 
 // Клас "Клієнт"
 public class Client extends Entity {
