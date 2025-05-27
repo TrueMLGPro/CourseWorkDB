@@ -4,16 +4,20 @@ import javax.swing.*;
 import java.io.*;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.sql.SQLException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import com.vitaliyrev.courseworkdb.app.*;
+import com.vitaliyrev.courseworkdb.app.db.DatabaseManager;
 
 // Головний клас
 public class Main {
-	private final List<Master> masters; // Список майстрів
-	private final List<Client> clients; // Список клієнтів
-	private final List<Accident> accidents; // Список аварій
+	private DatabaseManager dbManager;
+	private List<Master> masters; // Список майстрів
+	private List<Client> clients; // Список клієнтів
+	private List<Accident> accidents; // Список аварій
 	private final SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy", Locale.UK); // Формат дати
 	private static final List<String> BRIGADE_AND_DEPARTMENT_NUMBERS = Arrays.asList("1", "2", "3", "4", "5"); // Номери бригад та відділів
 	private static final List<String> MASTER_STATUSES = Arrays.asList( // Стани майстрів
@@ -49,10 +53,14 @@ public class Main {
 	);
 
 	public Main() {
-		this.masters = new ArrayList<>();
-		this.clients = new ArrayList<>();
-		this.accidents = new ArrayList<>();
-		loadAllData(); // Завантаження даних з файлів при створенні об'єкту
+		try {
+			this.dbManager = new DatabaseManager("jdbc:postgresql://localhost:5432/course_work_db", "course_work_db_admin", "courseworkdbadmin123");
+			loadAllData();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			JOptionPane.showMessageDialog(null, "Не вдалося приєднатись до бази даних: " + e.getMessage(), "Помилка", JOptionPane.ERROR_MESSAGE);
+			System.exit(1);
+		}
 	}
 
 	// Гетери для списків
@@ -258,9 +266,18 @@ public class Main {
 
 	// Завантаження всіх даних
 	private void loadAllData() {
-		loadMasters();
-		loadClients();
-		loadAccidents();
+		try {
+			List<Brigade> dbBrigades = dbManager.loadBrigades();
+			Map<Integer, Brigade> brigadeMap = dbBrigades.stream()
+					.collect(Collectors.toMap(Brigade::getNumber, b -> b));
+
+			this.masters = dbManager.loadMasters(brigadeMap);
+			this.accidents = dbManager.loadAccidents(brigadeMap);
+			this.clients = dbManager.loadClients();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			JOptionPane.showMessageDialog(null, "Failed to load data: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+		}
 	}
 
 	// Завантаження майстрів з файлу
@@ -309,24 +326,39 @@ public class Main {
 
 	// Збереження всіх даних
 	public void saveAllData() {
-		List<String> failedFiles = new ArrayList<>();
+		try {
+			dbManager.connection.setAutoCommit(false);
 
-		if (!saveEntities("data/masters.txt", masters, failedFiles)) {
-			failedFiles.add("data/masters.txt");
-		}
-		if (!saveEntities("data/clients.txt", clients, failedFiles)) {
-			failedFiles.add("data/clients.txt");
-		}
-		if (!saveEntities("data/accidents.txt", accidents, failedFiles)) {
-			failedFiles.add("data/accidents.txt");
-		}
-
-		if (!failedFiles.isEmpty()) {
-			StringBuilder errorMessage = new StringBuilder("Помилка збереження даних у файлах:\n");
-			for (String file : failedFiles) {
-				errorMessage.append(file).append("\n");
+			// Collect brigade numbers
+			Set<Integer> brigadeNumbers = new HashSet<>();
+			for (Master master : masters) {
+				brigadeNumbers.add(master.getBrigade().getNumber());
 			}
-			JOptionPane.showMessageDialog(null, errorMessage.toString(), "Помилка", JOptionPane.ERROR_MESSAGE);
+			for (Accident accident : accidents) {
+				brigadeNumbers.add(accident.getBrigade().getNumber());
+			}
+
+			// Save in correct order
+			dbManager.saveBrigades(brigadeNumbers);
+			dbManager.saveAccidents(accidents);
+			dbManager.saveClients(clients);
+			dbManager.saveMasters(masters);
+
+			dbManager.connection.commit();
+		} catch (SQLException e) {
+			try {
+				dbManager.connection.rollback();
+			} catch (SQLException ex) {
+				ex.printStackTrace();
+			}
+			e.printStackTrace();
+			JOptionPane.showMessageDialog(null, "Failed to save data: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+		} finally {
+			try {
+				dbManager.connection.setAutoCommit(true);
+			} catch (SQLException e) {
+				e.printStackTrace();
+			}
 		}
 	}
 
@@ -369,9 +401,6 @@ public class Main {
 
 	// Головний метод
 	public static void main(String[] args) {
-		SwingUtilities.invokeLater(() -> {
-			Main main = new Main();
-			new UserInterface(main);
-		});
+		SwingUtilities.invokeLater(() -> new UserInterface(new Main()));
 	}
 }
