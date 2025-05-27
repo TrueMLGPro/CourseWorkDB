@@ -1,7 +1,6 @@
 package com.vitaliyrev.courseworkdb.app;
 
 import javax.swing.*;
-import java.io.*;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.sql.SQLException;
@@ -9,7 +8,6 @@ import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import com.vitaliyrev.courseworkdb.app.*;
 import com.vitaliyrev.courseworkdb.app.db.DatabaseManager;
 
 // Головний клас
@@ -280,56 +278,12 @@ public class Main {
 		}
 	}
 
-	// Завантаження майстрів з файлу
-	private void loadMasters() {
-		masters.addAll(loadEntities("data/masters.txt", Master.class));
-		Map<Integer, Brigade> brigades = new HashMap<>();
-		for (Master master : masters) {
-			String[] parts = master.toString().split(";");
-			int brigadeNumber = Integer.parseInt(parts[6]);
-			int departmentNumber = Integer.parseInt(parts[7]);
-			Brigade brigade = brigades.getOrDefault(brigadeNumber, new Brigade(brigadeNumber));
-			master.setBrigade(brigade);
-			master.setDepartmentNumber(departmentNumber);
-			brigade.addMaster(master);
-			brigades.put(brigadeNumber, brigade);
-		}
-	}
-
-	// Завантаження клієнтів з файлу
-	private void loadClients() {
-		clients.addAll(loadEntities("data/clients.txt", Client.class));
-	}
-
-	// Завантаження аварій з файлу
-	private void loadAccidents() {
-		accidents.addAll(loadEntities("data/accidents.txt", Accident.class));
-	}
-
-	// Загальний метод для завантаження сутностей з файлу
-	private <T extends Entity> List<T> loadEntities(String filename, Class<T> clazz) {
-		List<T> entities = new ArrayList<>();
-		try (BufferedReader br = new BufferedReader(new FileReader(filename))) {
-			String line;
-			while ((line = br.readLine()) != null) {
-				String[] parts = line.split(";");
-				T entity = clazz.getDeclaredConstructor(String[].class).newInstance(new Object[]{parts});
-				entities.add(entity);
-			}
-		} catch (Exception e) {
-			String message = "Помилка завантаження даних з файлу " + filename + ": " + e.getMessage();
-			System.err.println(message);
-			JOptionPane.showMessageDialog(null, message, "Помилка", JOptionPane.ERROR_MESSAGE);
-		}
-		return entities;
-	}
-
 	// Збереження всіх даних
 	public void saveAllData() {
 		try {
 			dbManager.connection.setAutoCommit(false);
 
-			// Collect brigade numbers
+			// Збір номерів бригад та прив'язка до мастерів
 			Set<Integer> brigadeNumbers = new HashSet<>();
 			for (Master master : masters) {
 				brigadeNumbers.add(master.getBrigade().getNumber());
@@ -338,7 +292,6 @@ public class Main {
 				brigadeNumbers.add(accident.getBrigade().getNumber());
 			}
 
-			// Save in correct order
 			dbManager.saveBrigades(brigadeNumbers);
 			dbManager.saveAccidents(accidents);
 			dbManager.saveClients(clients);
@@ -359,22 +312,6 @@ public class Main {
 			} catch (SQLException e) {
 				e.printStackTrace();
 			}
-		}
-	}
-
-	// Загальний метод для збереження сутностей у файл
-	private <T extends Entity> boolean saveEntities(String filename, List<T> entities, List<String> failedFiles) {
-		try (BufferedWriter bw = new BufferedWriter(new FileWriter(filename))) {
-			for (T entity : entities) {
-				bw.write(entity.toString());
-				bw.newLine();
-			}
-			return true;
-		} catch (IOException e) {
-			String message = "Помилка збереження даних у файл " + filename + ": " + e.getMessage();
-			System.err.println(message);
-			failedFiles.add(filename);
-			return false;
 		}
 	}
 
