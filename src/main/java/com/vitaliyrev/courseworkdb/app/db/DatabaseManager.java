@@ -16,6 +16,7 @@ public class DatabaseManager {
 		initializeDatabase();
 	}
 
+	// Ініціалізація БД; створення таблиць у базі, якщо їх не існує
 	private void initializeDatabase() throws SQLException {
 		try (Statement stmt = connection.createStatement()) {
 			// Create tables if not exists
@@ -51,7 +52,7 @@ public class DatabaseManager {
 		}
 	}
 
-	// Load data from database
+	// Завантаження номерів бригад з БД
 	public List<Brigade> loadBrigades() throws SQLException {
 		List<Brigade> brigades = new ArrayList<>();
 		try (Statement stmt = connection.createStatement();
@@ -63,17 +64,14 @@ public class DatabaseManager {
 		return brigades;
 	}
 
+	// Завантаження мастерів з БД
 	public List<Master> loadMasters(Map<Integer, Brigade> brigadeMap) throws SQLException {
 		List<Master> masters = new ArrayList<>();
 		try (Statement stmt = connection.createStatement();
 		     ResultSet rs = stmt.executeQuery("SELECT * FROM masters")) {
 			while (rs.next()) {
 				int brigadeNumber = rs.getInt("brigade_number");
-				Brigade brigade = brigadeMap.get(brigadeNumber);
-				if (brigade == null) {
-					brigade = new Brigade(brigadeNumber);
-					brigadeMap.put(brigadeNumber, brigade);
-				}
+				Brigade brigade = brigadeMap.computeIfAbsent(brigadeNumber, Brigade::new);
 				Master master = new Master(
 						rs.getInt("id"),
 						rs.getString("name"),
@@ -91,17 +89,14 @@ public class DatabaseManager {
 		return masters;
 	}
 
+	// Завантаження аварій з БД
 	public List<Accident> loadAccidents(Map<Integer, Brigade> brigadeMap) throws SQLException {
 		List<Accident> accidents = new ArrayList<>();
 		try (Statement stmt = connection.createStatement();
 		     ResultSet rs = stmt.executeQuery("SELECT * FROM accidents")) {
 			while (rs.next()) {
 				int brigadeNumber = rs.getInt("brigade_number");
-				Brigade brigade = brigadeMap.get(brigadeNumber);
-				if (brigade == null) {
-					brigade = new Brigade(brigadeNumber);
-					brigadeMap.put(brigadeNumber, brigade);
-				}
+				Brigade brigade = brigadeMap.computeIfAbsent(brigadeNumber, Brigade::new);
 				Accident accident = new Accident(
 						rs.getInt("id"),
 						rs.getString("accident_id"),
@@ -118,6 +113,7 @@ public class DatabaseManager {
 		return accidents;
 	}
 
+	// Завантаження клієнтів з БД
 	public List<Client> loadClients() throws SQLException {
 		List<Client> clients = new ArrayList<>();
 		try (Statement stmt = connection.createStatement();
@@ -136,7 +132,7 @@ public class DatabaseManager {
 		return clients;
 	}
 
-	// Save data to database
+	// Збереження даних бригад до БД
 	public void saveBrigades(Set<Integer> brigadeNumbers) throws SQLException {
 		String sql = "INSERT INTO brigades (number) VALUES (?) ON CONFLICT (number) DO NOTHING";
 		try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
@@ -148,6 +144,7 @@ public class DatabaseManager {
 		}
 	}
 
+	// Збереження даних мастерів до БД
 	public void saveMasters(List<Master> masters) throws SQLException {
 		String sql = "INSERT INTO masters (id, name, address, phone_number, experience, status, brigade_number, department_number) " +
 				"VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (id) DO UPDATE SET " +
@@ -170,6 +167,7 @@ public class DatabaseManager {
 		}
 	}
 
+	// Збереження даних аварій до БД
 	public void saveAccidents(List<Accident> accidents) throws SQLException {
 		String sql = "INSERT INTO accidents (id, accident_id, address, type, cost, date, brigade_number, status) " +
 				"VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (id) DO UPDATE SET " +
@@ -191,6 +189,7 @@ public class DatabaseManager {
 		}
 	}
 
+	// Збереження даних клієнтів до БД
 	public void saveClients(List<Client> clients) throws SQLException {
 		String sql = "INSERT INTO clients (id, accident_id, name, address, phone_number, department_number) " +
 				"VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT (id) DO UPDATE SET " +
@@ -210,6 +209,7 @@ public class DatabaseManager {
 		}
 	}
 
+	// Закриття зв'язку до БД
 	public void close() throws SQLException {
 		if (connection != null && !connection.isClosed()) {
 			connection.close();
