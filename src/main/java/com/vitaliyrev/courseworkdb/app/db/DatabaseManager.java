@@ -9,7 +9,7 @@ import java.sql.*;
 import java.util.*;
 
 public class DatabaseManager {
-	private final Connection connection;
+	public final Connection connection;
 
 	public DatabaseManager(String url, String user, String password) throws SQLException {
 		this.connection = DriverManager.getConnection(url, user, password);
