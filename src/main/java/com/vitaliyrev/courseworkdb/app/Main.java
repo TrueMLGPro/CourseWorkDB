@@ -12,7 +12,7 @@ import com.vitaliyrev.courseworkdb.app.db.DatabaseManager;
 
 // Головний клас
 public class Main {
-	private DatabaseManager dbManager;
+	private DatabaseManager dbManager; // Клас для управління БД
 	private List<Master> masters; // Список майстрів
 	private List<Client> clients; // Список клієнтів
 	private List<Accident> accidents; // Список аварій

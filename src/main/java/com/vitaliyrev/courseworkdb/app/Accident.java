@@ -27,23 +27,6 @@ public class Accident extends Entity {
 		this.status = status;
 	}
 
-	// Конструктор класу з параметрами типу String[], що використовується для ініціалізації об'єкта з рядка даних
-	public Accident(String[] data) {
-		super(Integer.parseInt(data[0]));
-		this.accidentId = data[1];
-		this.address = data[2];
-		this.type = data[3];
-		this.cost = Double.parseDouble(data[4]);
-		try {
-			SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy", Locale.UK);
-			this.date = dateFormat.parse(data[5]);
-		} catch (Exception e) {
-			this.date = new Date(); // Якщо парсинг не вдався, встановлюється поточна дата
-		}
-		this.brigade = new Brigade(Integer.parseInt(data[6]));
-		this.status = data[7];
-	}
-
 	// Гетери та сетери для доступу до приватних полів класу
 	public String getAccidentId() {
 		return accidentId;

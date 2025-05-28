@@ -19,16 +19,6 @@ public class Client extends Entity {
 		this.departmentNumber = departmentNumber;
 	}
 
-	// Конструктор класу з параметрами типу String[], що використовується для ініціалізації об'єкта з рядка даних
-	public Client(String[] data) {
-		super(Integer.parseInt(data[0]));
-		this.accidentId = data[1];
-		this.name = data[2];
-		this.address = data[3];
-		this.phoneNumber = data[4];
-		this.departmentNumber = Integer.parseInt(data[5]);
-	}
-
 	// Гетери та сетери для доступу до приватних полів класу
 	public String getAccidentId() {
 		return accidentId;

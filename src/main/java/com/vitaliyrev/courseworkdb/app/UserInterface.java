@@ -593,7 +593,7 @@ public class UserInterface {
 		Date startDate = parseDate(accidentStartDateField.getText());
 		Date endDate = parseDate(accidentEndDateField.getText());
 		if (startDate != null && endDate != null) {
-			int count = 0;
+			int count;
 			try {
 				count = main.getAccidentsBetweenDates(startDate, endDate);
 				resultArea.setText("Кількість аварій з " + main.getDateFormat().format(startDate) + " по " + main.getDateFormat().format(endDate) + ": " + count);
