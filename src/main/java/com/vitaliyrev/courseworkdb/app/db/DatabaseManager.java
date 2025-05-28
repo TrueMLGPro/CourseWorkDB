@@ -8,6 +8,7 @@ import com.vitaliyrev.courseworkdb.app.Master;
 import java.sql.*;
 import java.util.*;
 
+// Клас "Менеджер БД"
 public class DatabaseManager {
 	public final Connection connection;
 
