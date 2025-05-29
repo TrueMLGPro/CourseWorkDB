@@ -6,6 +6,7 @@ import java.util.Locale;
 
 // Клас "Аварія"
 public class Accident extends Entity {
+	private Client client;
 	// Дані аварії
 	private String accidentId; // Унікальний ідентифікатор аварії
 	private String address; // Адреса, де відбулася аварія
@@ -28,6 +29,17 @@ public class Accident extends Entity {
 	}
 
 	// Гетери та сетери для доступу до приватних полів класу
+	public Client getClient() {
+		return client;
+	}
+
+	public void setAccidentIdToClientId(Client client) {
+		this.client = client;
+		if (client != null) {
+			client.setAccidentId(this.accidentId);
+		}
+	}
+
 	public String getAccidentId() {
 		return accidentId;
 	}

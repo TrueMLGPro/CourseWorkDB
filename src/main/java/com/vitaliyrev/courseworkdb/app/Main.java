@@ -12,7 +12,7 @@ import com.vitaliyrev.courseworkdb.app.db.DatabaseManager;
 
 // Головний клас
 public class Main {
-	private DatabaseManager dbManager; // Клас для управління БД
+	DatabaseManager dbManager; // Клас для управління БД
 	private List<Master> masters; // Список майстрів
 	private List<Client> clients; // Список клієнтів
 	private List<Accident> accidents; // Список аварій
@@ -52,7 +52,11 @@ public class Main {
 
 	public Main() {
 		try {
-			this.dbManager = new DatabaseManager("jdbc:postgresql://localhost:5432/course_work_db", "course_work_db_admin", "courseworkdbadmin123");
+			this.dbManager = new DatabaseManager(
+				"jdbc:postgresql://localhost:5432/course_work_db",
+				"course_work_db_admin",
+				"courseworkdbadmin123"
+			);
 			loadAllData();
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -169,8 +173,8 @@ public class Main {
 		return types;
 	}
 
-	// Набір номерів бригад
-	public List<String> getBrigadeNumbers() {
+	// Набір існуючих номерів бригад
+	public List<String> getUsedBrigadeNumbers() {
 		Set<Integer> brigadeNumbers = new HashSet<>();
 		for (Master master : masters) {
 			if (master.getBrigade() != null) {
@@ -189,9 +193,21 @@ public class Main {
 		return numbers;
 	}
 
-	// Набір номерів відділів майстрів
-	public List<String> getMasterDepartmentNumbers() {
-		return BRIGADE_AND_DEPARTMENT_NUMBERS;
+	public List<String> getUsedDepartmentNumbers() {
+		Set<Integer> departmentNumbers = new HashSet<>();
+		for (Master master : masters) {
+			departmentNumbers.add(master.getDepartmentNumber());
+		}
+		for (Accident accident : accidents) {
+			if (accident.getClient() != null) {
+				departmentNumbers.add(accident.getClient().getDepartmentNumber());
+			}
+		}
+		List<String> numbers = new ArrayList<>();
+		for (Integer number : departmentNumbers) {
+			numbers.add(number.toString());
+		}
+		return numbers;
 	}
 
 	// Набір ідентифікаторів аварій
@@ -262,6 +278,13 @@ public class Main {
 		return null;
 	}
 
+	private Client findClientByAccidentId(String accidentId) {
+		return clients.stream()
+				.filter(c -> c.getAccidentId().equals(accidentId))
+				.findFirst()
+				.orElse(null);
+	}
+
 	// Завантаження всіх даних
 	private void loadAllData() {
 		try {
@@ -269,12 +292,25 @@ public class Main {
 			Map<Integer, Brigade> brigadeMap = dbBrigades.stream()
 					.collect(Collectors.toMap(Brigade::getNumber, b -> b));
 
-			this.masters = dbManager.loadMasters(brigadeMap);
-			this.accidents = dbManager.loadAccidents(brigadeMap);
+			// Load clients first
 			this.clients = dbManager.loadClients();
+			Map<Integer, Client> clientMap = clients.stream()
+					.collect(Collectors.toMap(Client::getIndex, c -> c));
+
+			this.masters = dbManager.loadMasters(brigadeMap);
+			this.accidents = dbManager.loadAccidents(brigadeMap, clientMap);
+
+			for (Accident accident : accidents) {
+				if (accident.getClient() == null) {
+					Client client = findClientByAccidentId(accident.getAccidentId());
+					if (client != null) {
+						accident.setAccidentIdToClientId(client);
+					}
+				}
+			}
 		} catch (SQLException e) {
 			e.printStackTrace();
-			JOptionPane.showMessageDialog(null, "Failed to load data: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(null, "Помилка при завантаженні даних з БД: " + e.getMessage(), "Помилка", JOptionPane.ERROR_MESSAGE);
 		}
 	}
 
