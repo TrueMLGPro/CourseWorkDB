@@ -278,13 +278,6 @@ public class Main {
 		return null;
 	}
 
-	private Client findClientByAccidentId(String accidentId) {
-		return clients.stream()
-				.filter(c -> c.getAccidentId().equals(accidentId))
-				.findFirst()
-				.orElse(null);
-	}
-
 	// Завантаження всіх даних
 	private void loadAllData() {
 		try {
@@ -299,15 +292,6 @@ public class Main {
 
 			this.masters = dbManager.loadMasters(brigadeMap);
 			this.accidents = dbManager.loadAccidents(brigadeMap, clientMap);
-
-			for (Accident accident : accidents) {
-				if (accident.getClient() == null) {
-					Client client = findClientByAccidentId(accident.getAccidentId());
-					if (client != null) {
-						accident.setAccidentIdToClientId(client);
-					}
-				}
-			}
 		} catch (SQLException e) {
 			e.printStackTrace();
 			JOptionPane.showMessageDialog(null, "Помилка при завантаженні даних з БД: " + e.getMessage(), "Помилка", JOptionPane.ERROR_MESSAGE);
@@ -319,7 +303,7 @@ public class Main {
 		try {
 			dbManager.connection.setAutoCommit(false);
 
-			// Збір номерів бригад та прив'язка до мастерів
+			// Collect brigade numbers
 			Set<Integer> brigadeNumbers = new HashSet<>();
 			for (Master master : masters) {
 				brigadeNumbers.add(master.getBrigade().getNumber());
@@ -328,9 +312,10 @@ public class Main {
 				brigadeNumbers.add(accident.getBrigade().getNumber());
 			}
 
+			// Save in proper order
 			dbManager.saveBrigades(brigadeNumbers);
-			dbManager.saveAccidents(accidents);
-			dbManager.saveClients(clients);
+			dbManager.saveAccidents(accidents);  // Save accidents first
+			dbManager.saveClients(clients);      // Then save clients
 			dbManager.saveMasters(masters);
 
 			dbManager.connection.commit();

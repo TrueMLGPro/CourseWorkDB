@@ -33,6 +33,13 @@ public class Accident extends Entity {
 		return client;
 	}
 
+	public void setClient(Client client) {
+		this.client = client;
+		if (client != null) {
+			client.setAccident(this);
+		}
+	}
+
 	public void setAccidentIdToClientId(Client client) {
 		this.client = client;
 		if (client != null) {

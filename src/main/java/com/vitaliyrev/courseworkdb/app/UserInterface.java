@@ -476,6 +476,8 @@ public class UserInterface {
 			showSuccessOptionPane("Майстра додано успішно!");
 			clearAddFields(FIELD_TYPES.MASTER_FIELD);
 			populateMasterComboBoxes();
+			populateClientComboBoxes();
+			populateAccidentComboBoxes();
 		} catch (IllegalArgumentException ex) {
 			showErrorOptionPane(ex.getMessage());
 		} catch (Exception ex) {
@@ -496,6 +498,8 @@ public class UserInterface {
 				showSuccessOptionPane("Майстра з індексом " + masterIndex + " видалено успішно!");
 				clearDeleteFields(FIELD_TYPES.MASTER_FIELD);
 				populateMasterComboBoxes();
+				populateClientComboBoxes();
+				populateAccidentComboBoxes();
 			} else {
 				showErrorOptionPane("Майстра з індексом " + masterIndex + " не знайдено.");
 			}
@@ -540,6 +544,8 @@ public class UserInterface {
 				showSuccessOptionPane("Майстра з індексом " + masterIndex + " оновлено успішно!");
 				clearAddFields(FIELD_TYPES.MASTER_FIELD);
 				populateMasterComboBoxes();
+				populateClientComboBoxes();
+				populateAccidentComboBoxes();
 			} else {
 				showErrorOptionPane("Майстра з індексом " + masterIndex + " не знайдено.");
 			}
@@ -973,10 +979,10 @@ public class UserInterface {
 				case "Адреса" -> validateAddressField(textField, fieldName);
 				case "Стаж", "Вартість" -> validateNumberField(textField, fieldName);
 			}
-		} else if (field instanceof JComboBox<?> comboBox) {
-			if (comboBox.getSelectedIndex() == -1) {
-				throw new IllegalArgumentException("Поле " + fieldName + " не може бути порожнім.");
-			}
+		} else if (field instanceof JComboBox<?> comboBox) { // FIXME
+//			if (comboBox.getSelectedIndex() == -1) {
+//				throw new IllegalArgumentException("Поле " + fieldName + " не може бути порожнім.");
+//			}
 		} else {
 			throw new IllegalArgumentException("Невідомий тип поля: " + fieldName);
 		}
@@ -1096,13 +1102,23 @@ public class UserInterface {
 
 	private void loadClientData(String accidentId) {
 		Client client = main.getClientByAccidentId(accidentId);
+
+		// Always get the address from the accident first
+		Accident accident = main.getAccidentById(accidentId);
+		String address = (accident != null) ? accident.getAddress() : "";
+
 		if (client != null) {
+			// Use accident address if available, otherwise use client address
+			String displayAddress = !address.isEmpty() ? address : client.getAddress();
+
 			addClientNameField.setText(client.getName());
-			addClientAddressField.setText(client.getAddress());
+			addClientAddressField.setText(displayAddress);
 			addClientPhoneField.setText(client.getPhoneNumber());
 			addClientDepartmentField.setSelectedItem(String.valueOf(client.getDepartmentNumber()));
 		} else {
+			// No client exists, but accident might
 			clearAddFields(FIELD_TYPES.CLIENT_FIELD);
+			addClientAddressField.setText(address);
 		}
 	}
 
