@@ -28,6 +28,13 @@ public class Client extends Entity {
 		this.accidentId = accidentId;
 	}
 
+	public void setAccident(Accident accident) {
+		if (accident != null) {
+			this.address = accident.getAddress();
+			accident.setAddress(this.address);
+		}
+	}
+
 	public String getName() {
 		return name;
 	}

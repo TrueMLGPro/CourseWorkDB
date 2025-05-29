@@ -20,18 +20,10 @@ public class DatabaseManager {
 	// Ініціалізація БД; створення таблиць у базі, якщо їх не існує
 	private void initializeDatabase() throws SQLException {
 		try (Statement stmt = connection.createStatement()) {
+			// 1. Create brigades table first
 			stmt.execute("CREATE TABLE IF NOT EXISTS brigades (number INTEGER PRIMARY KEY)");
 
-			stmt.execute("CREATE TABLE IF NOT EXISTS masters (" +
-					"id SERIAL PRIMARY KEY, " +
-					"name VARCHAR(255), " +
-					"address VARCHAR(255), " +
-					"phone_number VARCHAR(255), " +
-					"experience INTEGER, " +
-					"status VARCHAR(255), " +
-					"brigade_number INTEGER REFERENCES brigades(number), " +
-					"department_number INTEGER)");
-
+			// 2. Create accidents table without client reference
 			stmt.execute("CREATE TABLE IF NOT EXISTS accidents (" +
 					"id SERIAL PRIMARY KEY, " +
 					"accident_id VARCHAR(255) UNIQUE, " +
@@ -42,12 +34,27 @@ public class DatabaseManager {
 					"brigade_number INTEGER REFERENCES brigades(number), " +
 					"status VARCHAR(255))");
 
+			// 3. Create clients table with accident reference
 			stmt.execute("CREATE TABLE IF NOT EXISTS clients (" +
 					"id SERIAL PRIMARY KEY, " +
-					"accident_id VARCHAR(255) REFERENCES accidents(accident_id), " +
+					"accident_id VARCHAR(255) REFERENCES accidents(accident_id) DEFERRABLE INITIALLY DEFERRED, " +
 					"name VARCHAR(255), " +
 					"address VARCHAR(255), " +
 					"phone_number VARCHAR(255), " +
+					"department_number INTEGER)");
+
+			// 4. Add client reference to accidents table
+			stmt.execute("ALTER TABLE accidents ADD COLUMN IF NOT EXISTS client_id INTEGER REFERENCES clients(id) DEFERRABLE INITIALLY DEFERRED");
+
+			// 5. Create masters table
+			stmt.execute("CREATE TABLE IF NOT EXISTS masters (" +
+					"id SERIAL PRIMARY KEY, " +
+					"name VARCHAR(255), " +
+					"address VARCHAR(255), " +
+					"phone_number VARCHAR(255), " +
+					"experience INTEGER, " +
+					"status VARCHAR(255), " +
+					"brigade_number INTEGER REFERENCES brigades(number), " +
 					"department_number INTEGER)");
 		}
 	}
@@ -113,8 +120,8 @@ public class DatabaseManager {
 				int clientId = rs.getInt("client_id");
 				if (!rs.wasNull() && clientMap.containsKey(clientId)) {
 					Client client = clientMap.get(clientId);
-					accident.setAccidentIdToClientId(client);
-					client.setAccidentId(accident.getAccidentId());
+					accident.setClient(client);
+					client.setAccident(accident); // Set bidirectional relationship
 				}
 
 				accidents.add(accident);
