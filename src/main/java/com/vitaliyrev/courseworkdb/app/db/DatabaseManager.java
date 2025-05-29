@@ -20,7 +20,6 @@ public class DatabaseManager {
 	// Ініціалізація БД; створення таблиць у базі, якщо їх не існує
 	private void initializeDatabase() throws SQLException {
 		try (Statement stmt = connection.createStatement()) {
-			// Create tables if not exists
 			stmt.execute("CREATE TABLE IF NOT EXISTS brigades (number INTEGER PRIMARY KEY)");
 
 			stmt.execute("CREATE TABLE IF NOT EXISTS masters (" +
@@ -91,13 +90,14 @@ public class DatabaseManager {
 	}
 
 	// Завантаження аварій з БД
-	public List<Accident> loadAccidents(Map<Integer, Brigade> brigadeMap) throws SQLException {
+	public List<Accident> loadAccidents(Map<Integer, Brigade> brigadeMap, Map<Integer, Client> clientMap) throws SQLException {
 		List<Accident> accidents = new ArrayList<>();
 		try (Statement stmt = connection.createStatement();
 		     ResultSet rs = stmt.executeQuery("SELECT * FROM accidents")) {
 			while (rs.next()) {
 				int brigadeNumber = rs.getInt("brigade_number");
 				Brigade brigade = brigadeMap.computeIfAbsent(brigadeNumber, Brigade::new);
+
 				Accident accident = new Accident(
 						rs.getInt("id"),
 						rs.getString("accident_id"),
@@ -108,6 +108,15 @@ public class DatabaseManager {
 						brigade,
 						rs.getString("status")
 				);
+
+				// Link client if exists
+				int clientId = rs.getInt("client_id");
+				if (!rs.wasNull() && clientMap.containsKey(clientId)) {
+					Client client = clientMap.get(clientId);
+					accident.setAccidentIdToClientId(client);
+					client.setAccidentId(accident.getAccidentId());
+				}
+
 				accidents.add(accident);
 			}
 		}
@@ -170,10 +179,14 @@ public class DatabaseManager {
 
 	// Збереження даних аварій до БД
 	public void saveAccidents(List<Accident> accidents) throws SQLException {
-		String sql = "INSERT INTO accidents (id, accident_id, address, type, cost, date, brigade_number, status) " +
-				"VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (id) DO UPDATE SET " +
-				"accident_id=EXCLUDED.accident_id, address=EXCLUDED.address, type=EXCLUDED.type, " +
-				"cost=EXCLUDED.cost, date=EXCLUDED.date, brigade_number=EXCLUDED.brigade_number, status=EXCLUDED.status";
+		String sql = "INSERT INTO accidents (id, accident_id, address, type, cost, date, brigade_number, status, client_id) " +
+				"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) " +
+				"ON CONFLICT (id) DO UPDATE SET " +
+				"accident_id = EXCLUDED.accident_id, address = EXCLUDED.address, " +
+				"type = EXCLUDED.type, cost = EXCLUDED.cost, date = EXCLUDED.date, " +
+				"brigade_number = EXCLUDED.brigade_number, status = EXCLUDED.status, " +
+				"client_id = EXCLUDED.client_id";
+
 		try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
 			for (Accident accident : accidents) {
 				pstmt.setInt(1, accident.getIndex());
@@ -184,6 +197,14 @@ public class DatabaseManager {
 				pstmt.setDate(6, new java.sql.Date(accident.getDate().getTime()));
 				pstmt.setInt(7, accident.getBrigade().getNumber());
 				pstmt.setString(8, accident.getStatus());
+
+				// Handle client reference
+				if (accident.getClient() != null) {
+					pstmt.setInt(9, accident.getClient().getIndex());
+				} else {
+					pstmt.setNull(9, Types.INTEGER);
+				}
+
 				pstmt.addBatch();
 			}
 			pstmt.executeBatch();
@@ -210,7 +231,7 @@ public class DatabaseManager {
 		}
 	}
 
-	// Закриття зв'язку до БД
+	// Закриття зв'язку з БД
 	public void close() throws SQLException {
 		if (connection != null && !connection.isClosed()) {
 			connection.close();

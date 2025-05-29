@@ -1,13 +1,18 @@
 package com.vitaliyrev.courseworkdb.app;
 
 import javax.swing.*;
-import java.awt.*;
+import java.awt.BorderLayout;
+import java.awt.Dimension;
+import java.awt.Font;
+import java.awt.GridBagConstraints;
+import java.awt.GridBagLayout;
+import java.awt.GridLayout;
+import java.awt.Insets;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
+import java.sql.SQLException;
 import java.text.ParseException;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.Set;
+import java.util.*;
 
 // Клас "Інтерфейс користувача"
 public class UserInterface {
@@ -126,8 +131,8 @@ public class UserInterface {
 		addField(fieldsPanel, gbc, "Номер телефону:", addMasterPhoneField = new JTextField(30));
 		addField(fieldsPanel, gbc, "Стаж:", addMasterExperienceField = new JTextField(30));
 		addField(fieldsPanel, gbc, "Стан:", addMasterStatusField = new JComboBox<>(main.getMasterStatuses().toArray(new String[0])));
-		addField(fieldsPanel, gbc, "Номер бригади:", addMasterBrigadeField = new JComboBox<>(main.getBrigadeNumbers().toArray(new String[0])));
-		addField(fieldsPanel, gbc, "Номер відділення:", addMasterDepartmentField = new JComboBox<>(main.getMasterDepartmentNumbers().toArray(new String[0])));
+		addField(fieldsPanel, gbc, "Номер бригади:", addMasterBrigadeField = new JComboBox<>(main.getBrigadeAndDepartmentNumbers().toArray(new String[0])));
+		addField(fieldsPanel, gbc, "Номер відділення:", addMasterDepartmentField = new JComboBox<>(main.getBrigadeAndDepartmentNumbers().toArray(new String[0])));
 
 		gbc.gridx = 0;
 		gbc.gridy++;
@@ -218,7 +223,7 @@ public class UserInterface {
 		addField(fieldsPanel, gbc, "Тип аварії:", addAccidentTypeField = new JComboBox<>(main.getAccidentTypes().toArray(new String[0])));
 		addField(fieldsPanel, gbc, "Вартість:", addAccidentCostField = new JTextField(30));
 		addField(fieldsPanel, gbc, "Стан:", addAccidentStatusField = new JComboBox<>(main.getAccidentStatuses().toArray(new String[0])));
-		addField(fieldsPanel, gbc, "Номер бригади:", addAccidentBrigadeField = new JComboBox<>(main.getBrigadeNumbers().toArray(new String[0])));
+		addField(fieldsPanel, gbc, "Номер бригади:", addAccidentBrigadeField = new JComboBox<>(main.getUsedDepartmentNumbers().toArray(new String[0])));
 
 		gbc.gridx = 0;
 		gbc.gridy++;
@@ -299,7 +304,7 @@ public class UserInterface {
 		addField(fieldsPanel, gbc, "Ім'я та прізвище:", addClientNameField = new JTextField(30));
 		addField(fieldsPanel, gbc, "Адреса:", addClientAddressField = new JTextField(30));
 		addField(fieldsPanel, gbc, "Номер телефону:", addClientPhoneField = new JTextField(30));
-		addField(fieldsPanel, gbc, "Номер відділення:", addClientDepartmentField = new JComboBox<>());
+		addField(fieldsPanel, gbc, "Номер відділення:", addClientDepartmentField = new JComboBox<>(main.getUsedDepartmentNumbers().toArray(new String[0])));
 
 		gbc.gridx = 0;
 		gbc.gridy++;
@@ -790,19 +795,33 @@ public class UserInterface {
 			int departmentNumber = Integer.parseInt((String) addClientDepartmentField.getSelectedItem());
 
 			int newIndex = main.getNextClientId();
-			String newAccidentId = newIndex + "-" + Main.generateRandomString(8);
+			String accidentId = (String) clientAccidentIdField.getSelectedItem();
 
-			Client client = new Client(newIndex, newAccidentId, name, address, phoneNumber, departmentNumber);
+			if (accidentId == null) {
+				int newAccidentIndex = main.getNextAccidentIndex();
+				accidentId = newAccidentIndex + "-" + Main.generateRandomString(8);
+
+				Date currentDate = new Date();
+				String accidentType = "Новий";
+				double accidentCost = 0.0;
+				String accidentStatus = "Новий";
+				int brigadeNumber = 1;
+
+				Brigade brigade = new Brigade(brigadeNumber);
+				Accident accident = new Accident(newAccidentIndex, accidentId, address,
+						accidentType, accidentCost, currentDate,
+						brigade, accidentStatus);
+				main.getAccidents().add(accident);
+			}
+
+			Client client = new Client(newIndex, accidentId, name, address, phoneNumber, departmentNumber);
 			main.getClients().add(client);
 
-			Date currentDate = new Date();
-			String accidentType = "Новий";
-			double accidentCost = 0.0;
-			String accidentStatus = "Новий";
-			int brigadeNumber = 1;
-
-			Accident accident = new Accident(newIndex, newAccidentId, address, accidentType, accidentCost, currentDate, new Brigade(brigadeNumber), accidentStatus);
-			main.getAccidents().add(accident);
+			Accident accident = main.getAccidentById(accidentId);
+			if (accident != null) {
+				accident.setAccidentIdToClientId(client);
+				main.getAccidents().add(accident);
+			}
 
 			main.saveAllData();
 			showSuccessOptionPane("Клієнта додано успішно!");
@@ -931,7 +950,15 @@ public class UserInterface {
 			return;
 		}
 
-		// Dispose the frame after the user has made a decision
+		// Закриття зв'язку з БД
+		try {
+			main.dbManager.close();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			showErrorOptionPane("Не вдалося закрити зв'язок з БД");
+		}
+
+		// Закриття вікна
 		frame.dispose();
 	}
 
@@ -996,38 +1023,60 @@ public class UserInterface {
 	}
 
 	private void populateMasterComboBoxes() {
-		String[] brigadeAndDepartmentNumbers = main.getBrigadeAndDepartmentNumbers().toArray(new String[0]);
-		masterIndexField.setModel(new DefaultComboBoxModel<>(main.getMasters().stream().map(Master::getIndex).map(String::valueOf).toArray(String[]::new)));
-		addMasterBrigadeField.setModel(new DefaultComboBoxModel<>(brigadeAndDepartmentNumbers));
-		addMasterDepartmentField.setModel(new DefaultComboBoxModel<>(brigadeAndDepartmentNumbers));
+		String[] masterIndices = main.getMasters().stream()
+				.map(master -> String.valueOf(master.getIndex()))
+				.toArray(String[]::new);
+
+		masterIndexField.setModel(new DefaultComboBoxModel<>(masterIndices));
+
+		String[] brigadeNumbers = main.getBrigadeAndDepartmentNumbers().toArray(new String[0]);
+		addMasterBrigadeField.setModel(new DefaultComboBoxModel<>(brigadeNumbers));
+
+		String[] departmentNumbers = main.getBrigadeAndDepartmentNumbers().toArray(new String[0]);
+		addMasterDepartmentField.setModel(new DefaultComboBoxModel<>(departmentNumbers));
 	}
 
 	private void populateAccidentComboBoxes() {
-		String[] accidentIds = main.getAccidentIds().toArray(new String[0]);
-		String[] accidentTypes = main.getAccidentTypes().toArray(new String[0]);
-		String[] brigadeAndDepartmentNumbers = main.getBrigadeAndDepartmentNumbers().toArray(new String[0]);
-		Arrays.sort(accidentIds, (id1, id2) -> {
-			int num1 = Integer.parseInt(id1.split("-")[0]);
-			int num2 = Integer.parseInt(id2.split("-")[0]);
-			return Integer.compare(num1, num2);
-		});
+		List<String> accidentIds = main.getAccidents().stream()
+				.map(Accident::getAccidentId)
+				.sorted((id1, id2) -> {
+					int num1 = Integer.parseInt(id1.split("-")[0]);
+					int num2 = Integer.parseInt(id2.split("-")[0]);
+					return Integer.compare(num1, num2);
+				})
+				.toList();
 
-		accidentIdField.setModel(new DefaultComboBoxModel<>(accidentIds));
+		accidentIdField.setModel(new DefaultComboBoxModel<>(accidentIds.toArray(new String[0])));
+
+		String[] brigadeNumbers = main.getUsedBrigadeNumbers().toArray(new String[0]);
+		String[] accidentTypes = main.getAccidentTypes().toArray(new String[0]);
+
 		addAccidentTypeField.setModel(new DefaultComboBoxModel<>(accidentTypes));
-		addAccidentBrigadeField.setModel(new DefaultComboBoxModel<>(brigadeAndDepartmentNumbers));
+		addAccidentBrigadeField.setModel(new DefaultComboBoxModel<>(brigadeNumbers));
 	}
 
 	private void populateClientComboBoxes() {
-		String[] accidentIds = main.getClientAccidentIds().toArray(new String[0]);
-		String[] brigadeAndDepartmentNumbers = main.getBrigadeAndDepartmentNumbers().toArray(new String[0]);
-		Arrays.sort(accidentIds, (id1, id2) -> {
+		Set<String> accidentIds = new HashSet<>();
+
+		accidentIds.addAll(main.getAccidents().stream()
+				.map(Accident::getAccidentId)
+				.toList());
+
+		accidentIds.addAll(main.getClients().stream()
+				.map(Client::getAccidentId)
+				.toList());
+
+		List<String> sortedIds = new ArrayList<>(accidentIds);
+		sortedIds.sort((id1, id2) -> {
 			int num1 = Integer.parseInt(id1.split("-")[0]);
 			int num2 = Integer.parseInt(id2.split("-")[0]);
 			return Integer.compare(num1, num2);
 		});
 
-		clientAccidentIdField.setModel(new DefaultComboBoxModel<>(accidentIds));
-		addClientDepartmentField.setModel(new DefaultComboBoxModel<>(brigadeAndDepartmentNumbers));
+		clientAccidentIdField.setModel(new DefaultComboBoxModel<>(sortedIds.toArray(new String[0])));
+
+		String[] departmentNumbers = main.getUsedDepartmentNumbers().toArray(new String[0]);
+		addClientDepartmentField.setModel(new DefaultComboBoxModel<>(departmentNumbers));
 	}
 
 	private void loadMasterData(int masterIndex) {
