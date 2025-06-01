@@ -23,7 +23,7 @@ public class DatabaseManager {
 			// 1. Create brigades table first
 			stmt.execute("CREATE TABLE IF NOT EXISTS brigades (number INTEGER PRIMARY KEY)");
 
-			// 2. Create accidents table without client reference
+			// 2. Create accidents table with ON DELETE CASCADE
 			stmt.execute("CREATE TABLE IF NOT EXISTS accidents (" +
 					"id SERIAL PRIMARY KEY, " +
 					"accident_id VARCHAR(255) UNIQUE, " +
@@ -31,20 +31,23 @@ public class DatabaseManager {
 					"type VARCHAR(255), " +
 					"cost DOUBLE PRECISION, " +
 					"date DATE, " +
-					"brigade_number INTEGER REFERENCES brigades(number), " +
+					"brigade_number INTEGER REFERENCES brigades(number) ON DELETE CASCADE, " +
 					"status VARCHAR(255))");
 
-			// 3. Create clients table with accident reference
+			// 3. Create clients table with ON DELETE CASCADE
 			stmt.execute("CREATE TABLE IF NOT EXISTS clients (" +
 					"id SERIAL PRIMARY KEY, " +
-					"accident_id VARCHAR(255) REFERENCES accidents(accident_id) DEFERRABLE INITIALLY DEFERRED, " +
+					"accident_id VARCHAR(255) REFERENCES accidents(accident_id) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED, " +
 					"name VARCHAR(255), " +
 					"address VARCHAR(255), " +
 					"phone_number VARCHAR(255), " +
 					"department_number INTEGER)");
 
-			// 4. Add client reference to accidents table
-			stmt.execute("ALTER TABLE accidents ADD COLUMN IF NOT EXISTS client_id INTEGER REFERENCES clients(id) DEFERRABLE INITIALLY DEFERRED");
+			// 4. Add client reference to accidents table with ON DELETE CASCADE
+			stmt.execute("ALTER TABLE accidents ADD COLUMN IF NOT EXISTS client_id INTEGER");
+			stmt.execute("ALTER TABLE accidents DROP CONSTRAINT IF EXISTS accidents_client_id_fkey");
+			stmt.execute("ALTER TABLE accidents ADD CONSTRAINT accidents_client_id_fkey " +
+					"FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED");
 
 			// 5. Create masters table
 			stmt.execute("CREATE TABLE IF NOT EXISTS masters (" +
@@ -54,7 +57,7 @@ public class DatabaseManager {
 					"phone_number VARCHAR(255), " +
 					"experience INTEGER, " +
 					"status VARCHAR(255), " +
-					"brigade_number INTEGER REFERENCES brigades(number), " +
+					"brigade_number INTEGER REFERENCES brigades(number) ON DELETE CASCADE, " +
 					"department_number INTEGER)");
 		}
 	}
@@ -235,6 +238,30 @@ public class DatabaseManager {
 				pstmt.addBatch();
 			}
 			pstmt.executeBatch();
+		}
+	}
+
+	public void deleteMaster(int masterId) throws SQLException {
+		String sql = "DELETE FROM masters WHERE id = ?";
+		try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+			pstmt.setInt(1, masterId);
+			pstmt.executeUpdate();
+		}
+	}
+
+	public void deleteAccident(int accidentIndex) throws SQLException {
+		String sql = "DELETE FROM accidents WHERE id = ?";
+		try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+			pstmt.setInt(1, accidentIndex);
+			pstmt.executeUpdate();
+		}
+	}
+
+	public void deleteClient(int clientId) throws SQLException {
+		String sql = "DELETE FROM clients WHERE id = ?";
+		try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+			pstmt.setInt(1, clientId);
+			pstmt.executeUpdate();
 		}
 	}
 
