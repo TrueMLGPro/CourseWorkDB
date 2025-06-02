@@ -97,7 +97,7 @@ public class Main {
 		return accidents.stream().mapToInt(Entity::getIndex).max().orElse(0) + 1;
 	}
 
-	public int getNextClientId() {
+	public int getNextClientIndex() {
 		if (clients.isEmpty()) {
 			return 1;
 		}
