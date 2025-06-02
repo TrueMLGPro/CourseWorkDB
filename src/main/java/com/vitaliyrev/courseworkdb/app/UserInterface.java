@@ -430,16 +430,10 @@ public class UserInterface {
 	}
 
 	private void calculateMasterSalary() {
+		validateField(masterIndexField, "Індекс майстра");
+		int masterIndex = Integer.parseInt(masterIndexField.getSelectedItem().toString());
 		Date startDate = parseDate(masterStartDateField.getText());
 		Date endDate = parseDate(masterEndDateField.getText());
-		int masterIndex;
-		try {
-			masterIndex = Integer.parseInt(masterIndexField.getSelectedItem().toString());
-		} catch (IllegalArgumentException ex) {
-			ex.printStackTrace();
-			showErrorOptionPane("Помилка: " + ex.getMessage());
-			return;
-		}
 
 		if (startDate != null && endDate != null && masterIndex != -1) {
 			double salary = main.getMasterSalaryBetweenDates(masterIndex, startDate, endDate);
@@ -459,6 +453,9 @@ public class UserInterface {
 			validateField(addMasterAddressField, "Адреса");
 			validateField(addMasterPhoneField, "Номер телефону");
 			validateField(addMasterExperienceField, "Стаж");
+			validateField(addMasterStatusField, "Стан");
+			validateField(addMasterBrigadeField, "Номер бригади");
+			validateField(addMasterDepartmentField, "Номер відділення");
 
 			String name = addMasterNameField.getText();
 			String address = addMasterAddressField.getText();
@@ -480,13 +477,13 @@ public class UserInterface {
 			populateClientComboBoxes();
 			populateAccidentComboBoxes();
 		} catch (IllegalArgumentException ex) {
-			ex.printStackTrace();
 			showErrorOptionPane("Помилка додавання майстра: " + ex.getMessage());
 		}
 	}
 
 	private void deleteMaster() {
 		try {
+			validateField(masterIndexField, "Індекс майстра");
 			int masterIndex = Integer.parseInt(masterIndexField.getSelectedItem().toString());
 			Master masterToRemove = main.getMasterByIndex(masterIndex);
 			if (masterToRemove != null) {
@@ -503,7 +500,6 @@ public class UserInterface {
 				showErrorOptionPane("Майстра з індексом " + masterIndex + " не знайдено.");
 			}
 		} catch (SQLException | IllegalArgumentException ex) {
-			ex.printStackTrace();
 			showErrorOptionPane("Помилка видалення майстра: " + ex.getMessage());
 		}
 	}
@@ -514,6 +510,9 @@ public class UserInterface {
 			validateField(addMasterAddressField, "Адреса");
 			validateField(addMasterPhoneField, "Номер телефону");
 			validateField(addMasterExperienceField, "Стаж");
+			validateField(addMasterStatusField, "Стан");
+			validateField(addMasterBrigadeField, "Номер бригади");
+			validateField(addMasterDepartmentField, "Номер відділення");
 
 			int masterIndex = Integer.parseInt(masterIndexField.getSelectedItem().toString());
 			Master masterToUpdate = main.getMasterByIndex(masterIndex);
@@ -544,7 +543,6 @@ public class UserInterface {
 				showErrorOptionPane("Майстра з індексом " + masterIndex + " не знайдено.");
 			}
 		} catch (IllegalArgumentException ex) {
-			ex.printStackTrace();
 			showErrorOptionPane("Помилка оновлення майстра: " + ex.getMessage());
 		}
 	}
@@ -612,8 +610,7 @@ public class UserInterface {
 				count = main.getAccidentsBetweenDates(startDate, endDate);
 				resultArea.setText("Кількість аварій з " + main.getDateFormat().format(startDate) + " по " + main.getDateFormat().format(endDate) + ": " + count);
 			} catch (IllegalArgumentException ex) {
-				ex.printStackTrace();
-				showErrorOptionPane(ex.getMessage());
+				showErrorOptionPane("Неправильний формат дати. Використовуйте dd/MM/yyyy.");
 				resultArea.setText("Неправильний формат дати. Використовуйте dd/MM/yyyy.");
 			}
 		} else {
@@ -628,9 +625,15 @@ public class UserInterface {
 	private void accidentTypes() {
 		Set<String> types = main.getExistingAccidentTypes();
 		StringBuilder sb = new StringBuilder("Типи аварій у записах:\n");
-		for (String type : types) {
-			sb.append(type).append("\n");
+
+		if (types.isEmpty()) {
+			sb.append("Немає");
+		} else {
+			for (String type : types) {
+				sb.append(type).append("\n");
+			}
 		}
+
 		resultArea.setText(sb.toString());
 	}
 
@@ -638,7 +641,11 @@ public class UserInterface {
 		try {
 			validateField(addAccidentDateField, "Дата");
 			validateField(addAccidentAddressField, "Адреса");
+			validateField(addAccidentTypeField, "Тип аварії");
 			validateField(addAccidentCostField, "Вартість");
+			validateField(addAccidentStatusField, "Стан");
+			validateField(addAccidentBrigadeField, "Номер бригади");
+
 
 			Date date = parseDate(addAccidentDateField.getText());
 			String address = addAccidentAddressField.getText();
@@ -659,13 +666,13 @@ public class UserInterface {
 			populateAccidentComboBoxes();
 			populateClientComboBoxes();
 		} catch (IllegalArgumentException ex) {
-			ex.printStackTrace();
 			showErrorOptionPane("Помилка додавання аварії: " + ex.getMessage());
 		}
 	}
 
 	private void deleteAccident() {
 		try {
+			validateField(accidentIdField, "ID аварії");
 			String accidentId = (String) accidentIdField.getSelectedItem();
 			Accident accidentToRemove = main.getAccidentById(accidentId);
 			if (accidentToRemove != null) {
@@ -680,12 +687,12 @@ public class UserInterface {
 				main.getAccidents().remove(accidentToRemove);
 
 				main.saveAllData();
-				showSuccessOptionPane("Аварію видалено успішно!");
+				showSuccessOptionPane("Аварію з ID " + accidentId + " видалено успішно!");
 				clearDeleteFields(FIELD_TYPES.ACCIDENT_FIELD);
 				populateAccidentComboBoxes();
 				populateClientComboBoxes();
 			} else {
-				showErrorOptionPane("Аварію не знайдено.");
+				showErrorOptionPane("Аварію з ID " + accidentId + " не знайдено.");
 			}
 		} catch (SQLException | IllegalArgumentException ex) {
 			showErrorOptionPane("Помилка видалення аварії: " + ex.getMessage());
@@ -694,6 +701,7 @@ public class UserInterface {
 
 	private void deleteAccidentAndClient() {
 		try {
+			validateField(accidentIdField, "ID аварії");
 			String accidentId = (String) accidentIdField.getSelectedItem();
 			Accident accidentToRemove = main.getAccidentById(accidentId);
 			Client clientToRemove = main.getClientByAccidentId(accidentId);
@@ -715,7 +723,6 @@ public class UserInterface {
 				showErrorOptionPane("Не вдалося знайти пов'язані записи");
 			}
 		} catch (SQLException | IllegalArgumentException ex) {
-			ex.printStackTrace();
 			showErrorOptionPane("Помилка видалення: " + ex.getMessage());
 		}
 	}
@@ -724,7 +731,12 @@ public class UserInterface {
 		try {
 			validateField(addAccidentDateField, "Дата");
 			validateField(addAccidentAddressField, "Адреса");
+			validateField(addAccidentTypeField, "Тип аварії");
 			validateField(addAccidentCostField, "Вартість");
+			validateField(addAccidentStatusField, "Стан");
+			validateField(addAccidentBrigadeField, "Номер бригади");
+			validateField(accidentIdField, "ID аварії");
+
 
 			String accidentId = (String) accidentIdField.getSelectedItem();
 			Accident accidentToUpdate = main.getAccidentById(accidentId);
@@ -760,7 +772,6 @@ public class UserInterface {
 				showErrorOptionPane("Аварію з ID " + accidentId + " не знайдено.");
 			}
 		} catch (IllegalArgumentException ex) {
-			ex.printStackTrace();
 			showErrorOptionPane("Помилка оновлення аварії: " + ex.getMessage());
 		}
 	}
@@ -824,13 +835,14 @@ public class UserInterface {
 			validateField(addClientNameField, "Ім'я та прізвище");
 			validateField(addClientAddressField, "Адреса");
 			validateField(addClientPhoneField, "Номер телефону");
+			validateField(addClientDepartmentField, "Номер відділення");
 
 			String name = addClientNameField.getText();
 			String address = addClientAddressField.getText();
 			String phoneNumber = addClientPhoneField.getText();
 			int departmentNumber = Integer.parseInt((String) addClientDepartmentField.getSelectedItem());
 
-			int nextClientId = main.getNextClientId();
+			int nextClientIndex = main.getNextClientIndex();
 			int newAccidentIndex = main.getNextAccidentIndex();
 			String accidentId = newAccidentIndex + "-" + Main.generateRandomString(8);
 
@@ -846,7 +858,7 @@ public class UserInterface {
 					brigade, accidentStatus);
 			main.getAccidents().add(accident);
 
-			Client client = new Client(nextClientId, accidentId, name, address, phoneNumber, departmentNumber);
+			Client client = new Client(nextClientIndex, accidentId, name, address, phoneNumber, departmentNumber);
 			main.getClients().add(client);
 
 			accident.setClient(client);
@@ -857,13 +869,13 @@ public class UserInterface {
 			populateClientComboBoxes();
 			populateAccidentComboBoxes();
 		} catch (IllegalArgumentException ex) {
-			ex.printStackTrace();
 			showErrorOptionPane("Помилка додавання клієнта: " + ex.getMessage());
 		}
 	}
 
 	private void deleteClient() {
 		try {
+			validateField(clientAccidentIdField, "ID аварії");
 			String accidentId = (String) clientAccidentIdField.getSelectedItem();
 			Client clientToRemove = main.getClientByAccidentId(accidentId);
 			if (clientToRemove != null) {
@@ -878,12 +890,12 @@ public class UserInterface {
 				main.getClients().remove(clientToRemove);
 
 				main.saveAllData();
-				showSuccessOptionPane("Клієнта видалено успішно!");
+				showSuccessOptionPane("Клієнта з ID аварії " + accidentId + " видалено успішно!");
 				clearDeleteFields(FIELD_TYPES.CLIENT_FIELD);
 				populateClientComboBoxes();
 				populateAccidentComboBoxes();
 			} else {
-				showErrorOptionPane("Клієнта не знайдено.");
+				showErrorOptionPane("Клієнта з ID аварії " + accidentId + " не знайдено.");
 			}
 		} catch (SQLException | IllegalArgumentException ex) {
 			showErrorOptionPane("Помилка видалення клієнта: " + ex.getMessage());
@@ -892,6 +904,7 @@ public class UserInterface {
 
 	private void deleteClientAndAccident() {
 		try {
+			validateField(clientAccidentIdField, "ID аварії");
 			String accidentId = (String) clientAccidentIdField.getSelectedItem();
 			Client clientToRemove = main.getClientByAccidentId(accidentId);
 			Accident accidentToRemove = main.getAccidentById(accidentId);
@@ -913,7 +926,6 @@ public class UserInterface {
 				showErrorOptionPane("Не вдалося знайти пов'язані записи");
 			}
 		} catch (SQLException | IllegalArgumentException ex) {
-			ex.printStackTrace();
 			showErrorOptionPane("Помилка видалення: " + ex.getMessage());
 		}
 	}
@@ -923,30 +935,48 @@ public class UserInterface {
 			validateField(addClientNameField, "Ім'я та прізвище");
 			validateField(addClientAddressField, "Адреса");
 			validateField(addClientPhoneField, "Номер телефону");
+			validateField(addClientDepartmentField, "Номер відділення");
+			validateField(clientAccidentIdField, "ID аварії");
 
 			String accidentId = (String) clientAccidentIdField.getSelectedItem();
 			Client clientToUpdate = main.getClientByAccidentId(accidentId);
-			if (clientToUpdate != null) {
+			Accident accident = main.getAccidentById(accidentId);
+
+			if (accident == null) {
+				showErrorOptionPane("Аварію з ID " + accidentId + " не знайдено.");
+				return;
+			}
+
+			if (clientToUpdate == null) {
+				// Create new client if it doesn't exist
+				int nextClientIndex = main.getNextClientIndex();
+				clientToUpdate = new Client(
+						nextClientIndex,
+						accidentId,
+						addClientNameField.getText(),
+						addClientAddressField.getText(),
+						addClientPhoneField.getText(),
+						Integer.parseInt((String) addClientDepartmentField.getSelectedItem())
+				);
+				main.getClients().add(clientToUpdate);
+				accident.setClient(clientToUpdate);
+			} else {
+				// Update existing client
 				clientToUpdate.setName(addClientNameField.getText());
 				clientToUpdate.setAddress(addClientAddressField.getText());
 				clientToUpdate.setPhoneNumber(addClientPhoneField.getText());
 				clientToUpdate.setDepartmentNumber(Integer.parseInt((String) addClientDepartmentField.getSelectedItem()));
-
-				Accident accidentToUpdate = main.getAccidentById(accidentId);
-				if (accidentToUpdate != null) {
-					accidentToUpdate.setAddress(addClientAddressField.getText());
-				}
-
-				main.saveAllData();
-				showSuccessOptionPane("Клієнта з ID аварії " + accidentId + " оновлено успішно!");
-				clearAddFields(FIELD_TYPES.CLIENT_FIELD);
-				populateClientComboBoxes();
-				populateAccidentComboBoxes();
-			} else {
-				showErrorOptionPane("Клієнта з ID аварії " + accidentId + " не знайдено.");
 			}
+
+			// Update accident address
+			accident.setAddress(addClientAddressField.getText());
+
+			main.saveAllData();
+			showSuccessOptionPane("Клієнта з ID аварії " + accidentId + " оновлено успішно!");
+			clearAddFields(FIELD_TYPES.CLIENT_FIELD);
+			populateClientComboBoxes();
+			populateAccidentComboBoxes();
 		} catch (IllegalArgumentException ex) {
-			ex.printStackTrace();
 			showErrorOptionPane("Помилка оновлення клієнта: " + ex.getMessage());
 		}
 	}
@@ -1031,6 +1061,10 @@ public class UserInterface {
 				case "Номер телефону" -> validatePhoneNumberField(textField, fieldName);
 				case "Адреса" -> validateAddressField(textField, fieldName);
 				case "Стаж", "Вартість" -> validateNumberField(textField, fieldName);
+			}
+		} else if (field instanceof JComboBox<?> comboBox) {
+			if (comboBox.getSelectedIndex() == -1) {
+				throw new IllegalArgumentException("Поле " + fieldName + " не може бути порожнім.");
 			}
 		} else {
 			throw new IllegalArgumentException("Невідомий тип поля: " + fieldName);
