@@ -51,12 +51,22 @@ public class Main {
 	);
 
 	public Main() {
+		this(
+			System.getProperty("db.url", "jdbc:postgresql://localhost:5432/course_work_db"),
+			System.getProperty("db.user", "course_work_db_admin"),
+			System.getProperty("db.password", "courseworkdbadmin123")
+		);
+	}
+
+	// For tests
+	public Main(DatabaseManager dbManager) {
+		this.dbManager = dbManager;
+		loadAllData();
+	}
+
+	public Main(String url, String user, String password) { // TODO: MAKE A SEPARATE CONSTRUCTOR FOR TESTS
 		try {
-			this.dbManager = new DatabaseManager(
-				"jdbc:postgresql://localhost:5432/course_work_db",
-				"course_work_db_admin",
-				"courseworkdbadmin123"
-			);
+			this.dbManager = new DatabaseManager(url, user, password);
 			loadAllData();
 		} catch (SQLException e) {
 			e.printStackTrace();
@@ -80,6 +90,19 @@ public class Main {
 
 	public SimpleDateFormat getDateFormat() {
 		return dateFormat;
+	}
+
+	// Сеттери для списків, використовуються тільки для проведення тестів
+	public void setMasters(List<Master> masters) {
+		this.masters = masters != null ? masters : new ArrayList<>();
+	}
+
+	public void setClients(List<Client> clients) {
+		this.clients = clients != null ? clients : new ArrayList<>();
+	}
+
+	public void setAccidents(List<Accident> accidents) {
+		this.accidents = accidents != null ? accidents : new ArrayList<>();
 	}
 
 	// Методи для отримання наступних індексів
@@ -106,26 +129,25 @@ public class Main {
 
 	// Обчислення заробітної плати майстра за період
 	public double getMasterSalaryBetweenDates(int masterIndex, Date startDate, Date endDate) {
-		int hoursPerAccident = 2;
 		double experienceBonusPerYear = 200.0;
-
 		double totalSalary = 0;
 
 		for (Accident accident : accidents) {
-			if ((accident.getDate().after(startDate) && accident.getDate().before(endDate)) && accident.getBrigade() != null) {
+			Date accidentDate = accident.getDate();
+			if (accidentDate != null && accidentDate.compareTo(startDate) >= 0 &&
+					accidentDate.compareTo(endDate) <= 0 && accident.getBrigade() != null) {
+
 				for (Master master : masters) {
-					if (master.getIndex() == masterIndex && master.getBrigade() != null) {
-						if (master.getBrigade().getNumber() == accident.getBrigade().getNumber()) {
-							double accidentCost = accident.getCost();
-							double experienceBonus = master.getExperience() * experienceBonusPerYear;
-							double effectiveCost = accidentCost + experienceBonus;
-							totalSalary += effectiveCost * hoursPerAccident;
-						}
+					if (master.getIndex() == masterIndex && master.getBrigade() != null &&
+							master.getBrigade().getNumber() == accident.getBrigade().getNumber()) {
+
+						double accidentCost = accident.getCost();
+						double experienceBonus = master.getExperience() * experienceBonusPerYear;
+						totalSalary += accidentCost + experienceBonus;
 					}
 				}
 			}
 		}
-
 		return totalSalary;
 	}
 
@@ -301,38 +323,39 @@ public class Main {
 	// Збереження всіх даних
 	public void saveAllData() {
 		try {
-			dbManager.connection.setAutoCommit(false);
+			dbManager.beginTransaction();
 
 			// Collect brigade numbers
 			Set<Integer> brigadeNumbers = new HashSet<>();
-			for (Master master : masters) {
-				brigadeNumbers.add(master.getBrigade().getNumber());
+			if (masters != null) {
+				for (Master master : masters) {
+					brigadeNumbers.add(master.getBrigade().getNumber());
+				}
 			}
-			for (Accident accident : accidents) {
-				brigadeNumbers.add(accident.getBrigade().getNumber());
+			if (accidents != null) {
+				for (Accident accident : accidents) {
+					brigadeNumbers.add(accident.getBrigade().getNumber());
+				}
 			}
 
-			// Save in proper order
+			// Save in proper order with foreign key dependencies
 			dbManager.saveBrigades(brigadeNumbers);
-			dbManager.saveAccidents(accidents);  // Save accidents first
-			dbManager.saveClients(clients);      // Then save clients
-			dbManager.saveMasters(masters);
+			if (accidents != null) dbManager.saveAccidents(accidents);
+			if (clients != null) dbManager.saveClients(clients);
+			if (masters != null) dbManager.saveMasters(masters);
 
-			dbManager.connection.commit();
+			dbManager.commitTransaction();
 		} catch (SQLException e) {
 			try {
-				dbManager.connection.rollback();
+				// Null-safe rollback
+				if (dbManager.getConnection() != null) {
+					dbManager.getConnection().rollback();
+				}
 			} catch (SQLException ex) {
 				ex.printStackTrace();
 			}
 			e.printStackTrace();
 			JOptionPane.showMessageDialog(null, "Failed to save data: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-		} finally {
-			try {
-				dbManager.connection.setAutoCommit(true);
-			} catch (SQLException e) {
-				e.printStackTrace();
-			}
 		}
 	}
 

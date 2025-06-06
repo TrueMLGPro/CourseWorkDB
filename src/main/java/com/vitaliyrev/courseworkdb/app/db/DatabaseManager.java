@@ -10,15 +10,35 @@ import java.util.*;
 
 // Клас "Менеджер БД"
 public class DatabaseManager {
-	public final Connection connection;
+	private Connection connection;
+
+	public DatabaseManager(Connection connection) {
+		this.connection = connection;
+	}
 
 	public DatabaseManager(String url, String user, String password) throws SQLException {
 		this.connection = DriverManager.getConnection(url, user, password);
 		initializeDatabase();
 	}
 
+	public Connection getConnection() {
+		return connection;
+	}
+
+	public void setConnection(Connection connection) { // TODO: MAKE ACCESSIBLE ONLY IN TESTS
+		this.connection = connection;
+	}
+
+	public void beginTransaction() throws SQLException {
+		connection.setAutoCommit(false);
+	}
+
+	public void commitTransaction() throws SQLException {
+		connection.commit();
+	}
+
 	// Ініціалізація БД; створення таблиць у базі, якщо їх не існує
-	private void initializeDatabase() throws SQLException {
+	public void initializeDatabase() throws SQLException {
 		try (Statement stmt = connection.createStatement()) {
 			// 1. Create brigades table first
 			stmt.execute("CREATE TABLE IF NOT EXISTS brigades (number INTEGER PRIMARY KEY)");
