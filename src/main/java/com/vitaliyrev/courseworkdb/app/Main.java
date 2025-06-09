@@ -3,16 +3,23 @@ package com.vitaliyrev.courseworkdb.app;
 import javax.swing.*;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.sql.SQLException;
+import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.Date;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import com.vitaliyrev.courseworkdb.app.db.DatabaseManager;
 
 // Головний клас
 public class Main {
-	DatabaseManager dbManager; // Клас для управління БД
+	protected DatabaseManager dbManager; // Клас для управління БД
+	private String url;
+	private String user;
+	private String password;
+	private static UserInterface userInterface;
+
 	private List<Master> masters; // Список майстрів
 	private List<Client> clients; // Список клієнтів
 	private List<Accident> accidents; // Список аварій
@@ -56,6 +63,7 @@ public class Main {
 			System.getProperty("db.user", "course_work_db_admin"),
 			System.getProperty("db.password", "courseworkdbadmin123")
 		);
+		userInterface = new UserInterface(this);
 	}
 
 	// For tests
@@ -64,7 +72,11 @@ public class Main {
 		loadAllData();
 	}
 
-	public Main(String url, String user, String password) { // TODO: MAKE A SEPARATE CONSTRUCTOR FOR TESTS
+	public Main(String url, String user, String password) {
+		this.url = url;
+		this.user = user;
+		this.password = password;
+
 		try {
 			this.dbManager = new DatabaseManager(url, user, password);
 			loadAllData();
@@ -73,6 +85,102 @@ public class Main {
 			JOptionPane.showMessageDialog(null, "Не вдалося приєднатись до бази даних: " + e.getMessage(), "Помилка", JOptionPane.ERROR_MESSAGE);
 			System.exit(1);
 		}
+	}
+
+	private <T> T executeQuery(String sql, ResultSetProcessor<T> processor) {
+		try (Connection conn = this.dbManager.getConnection();
+		     Statement stmt = conn.createStatement();
+		     ResultSet rs = stmt.executeQuery(sql)) {
+			return processor.process(rs);
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	private <T> T executeParamQuery(String sql, Object param, ResultSetProcessor<T> processor) {
+		try (Connection conn = this.dbManager.getConnection();
+		     PreparedStatement stmt = conn.prepareStatement(sql)) {
+			stmt.setObject(1, param);
+			try (ResultSet rs = stmt.executeQuery()) {
+				if (rs.next()) {
+					return processor.process(rs);
+				} else {
+					return null;
+				}
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	private <T> T executeParamQuery(String sql, Object param1, Object param2, ResultSetProcessor<T> processor) {
+		try (Connection conn = this.dbManager.getConnection();
+		     PreparedStatement stmt = conn.prepareStatement(sql)) {
+			stmt.setObject(1, param1);
+			stmt.setObject(2, param2);
+			try (ResultSet rs = stmt.executeQuery()) {
+				return processor.process(rs);
+			}
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	private <T> T executeScalarQuery(String sql, ResultSetProcessor<T> processor) {
+		try (Connection conn = this.dbManager.getConnection();
+		     Statement stmt = conn.createStatement();
+		     ResultSet rs = stmt.executeQuery(sql)) {
+			if (rs.next()) {
+				return processor.process(rs);
+			}
+			return null;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	private List<Integer> executeIdListQuery(String sql) {
+		return executeQuery(sql, rs -> {
+			List<Integer> result = new ArrayList<>();
+			while (rs.next()) {
+				result.add(rs.getInt(1));
+			}
+			return result;
+		});
+	}
+
+	private <T> T executeResilientQuery(Supplier<T> querySupplier) {
+		try {
+			if (!this.dbManager.isConnectionValid()) {
+				System.out.println("Connection invalid. Reconnecting...");
+				reconnect();
+			}
+			T result = querySupplier.get();
+			if (userInterface != null) {
+				userInterface.updateConnectionStatus();
+			}
+			return result;
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
+	@FunctionalInterface
+	private interface ResultSetProcessor<T> {
+		T process(ResultSet rs) throws SQLException;
+	}
+
+	public void reconnect() throws SQLException {
+		if (dbManager != null) {
+			dbManager.close();
+		}
+		dbManager = new DatabaseManager(url, user, password);
+		loadAllData();
 	}
 
 	// Гетери для списків
@@ -163,7 +271,7 @@ public class Main {
 	}
 
 	// Кількість аварій за період
-	public int getAccidentsBetweenDates(Date startDate, Date endDate) throws IllegalArgumentException {
+	public int getAccidentCountBetweenDates(Date startDate, Date endDate) throws IllegalArgumentException {
 		if (startDate == null || endDate == null) return 0;
 		if (startDate.after(endDate))
 			throw new IllegalArgumentException("Початкова дата не може бути більшою за кінцеву дату.");
@@ -232,24 +340,6 @@ public class Main {
 		return numbers;
 	}
 
-	// Набір ідентифікаторів аварій
-	public List<String> getAccidentIds() {
-		Set<String> accidentIds = new HashSet<>();
-		for (Accident accident : accidents) {
-			accidentIds.add(accident.getAccidentId());
-		}
-		return new ArrayList<>(accidentIds);
-	}
-
-	// Набір ідентифікаторів аварій клієнтів
-	public List<String> getClientAccidentIds() {
-		Set<String> accidentIds = new HashSet<>();
-		for (Client client : clients) {
-			accidentIds.add(client.getAccidentId());
-		}
-		return new ArrayList<>(accidentIds);
-	}
-
 	// Номери бригад та відділів
 	public List<String> getBrigadeAndDepartmentNumbers() {
 		return BRIGADE_AND_DEPARTMENT_NUMBERS;
@@ -301,7 +391,7 @@ public class Main {
 	}
 
 	// Завантаження всіх даних
-	private void loadAllData() {
+	public void loadAllData() {
 		try {
 			List<Brigade> dbBrigades = dbManager.loadBrigades();
 			Map<Integer, Brigade> brigadeMap = dbBrigades.stream()
@@ -309,8 +399,8 @@ public class Main {
 
 			// Load clients first
 			this.clients = dbManager.loadClients();
-			Map<Integer, Client> clientMap = clients.stream()
-					.collect(Collectors.toMap(Client::getIndex, c -> c));
+			Map<String, Client> clientMap = clients.stream()
+					.collect(Collectors.toMap(Client::getAccidentId, c -> c));
 
 			this.masters = dbManager.loadMasters(brigadeMap);
 			this.accidents = dbManager.loadAccidents(brigadeMap, clientMap);
@@ -323,8 +413,6 @@ public class Main {
 	// Збереження всіх даних
 	public void saveAllData() {
 		try {
-			dbManager.beginTransaction();
-
 			// Collect brigade numbers
 			Set<Integer> brigadeNumbers = new HashSet<>();
 			if (masters != null) {
@@ -340,20 +428,10 @@ public class Main {
 
 			// Save in proper order with foreign key dependencies
 			dbManager.saveBrigades(brigadeNumbers);
-			if (accidents != null) dbManager.saveAccidents(accidents);
 			if (clients != null) dbManager.saveClients(clients);
+			if (accidents != null) dbManager.saveAccidents(accidents);
 			if (masters != null) dbManager.saveMasters(masters);
-
-			dbManager.commitTransaction();
 		} catch (SQLException e) {
-			try {
-				// Null-safe rollback
-				if (dbManager.getConnection() != null) {
-					dbManager.getConnection().rollback();
-				}
-			} catch (SQLException ex) {
-				ex.printStackTrace();
-			}
 			e.printStackTrace();
 			JOptionPane.showMessageDialog(null, "Failed to save data: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
 		}
@@ -380,8 +458,182 @@ public class Main {
 		return sb.toString();
 	}
 
+	// SQL
+	// 1
+	public String getMastersWithBrigadeInfo() {
+		return executeResilientQuery(() -> {
+			String sql = "SELECT m.name AS master_name, b.number AS brigade_number, m.status " +
+					"FROM masters m " +
+					"JOIN brigades b ON m.brigade_number = b.number " +
+					"ORDER BY m.name";
+			return executeQuery(sql, rs -> {
+				StringBuilder sb = new StringBuilder();
+				while (rs.next()) {
+					sb.append(rs.getString("master_name"))
+							.append(" | Бригада: ")
+							.append(rs.getInt("brigade_number"))
+							.append(" | Статус: ")
+							.append(rs.getString("status"))
+							.append("\n");
+				}
+				return sb.toString();
+			});
+		});
+	}
+
+	// 2
+	public String findClientsByNamePattern(String pattern) {
+		return executeResilientQuery(() -> {
+			String sql = "SELECT name, phone_number, department_number " +
+					"FROM clients WHERE name LIKE ?";
+			return executeParamQuery(sql, pattern + "%", rs -> {
+				StringBuilder result = new StringBuilder();
+				do {
+					result.append(rs.getString("name"))
+							.append(" | Тел: ")
+							.append(rs.getString("phone_number"))
+							.append(" | Відділ: ")
+							.append(rs.getInt("department_number"))
+							.append("\n");
+				} while (rs.next());
+				return result.toString();
+			});
+		});
+	}
+
+	// 3
+	public String getAccidentsBetweenDates(Date start, Date end) {
+		return executeResilientQuery(() -> {
+			String sql = "SELECT accident_id, address, cost, date " +
+					"FROM accidents WHERE date BETWEEN ? AND ?";
+			return executeParamQuery(sql,
+					new java.sql.Date(start.getTime()),
+					new java.sql.Date(end.getTime()),
+					rs -> {
+						StringBuilder sb = new StringBuilder();
+						while (rs.next()) {
+							sb.append(String.format("%s | %s | %.2f грн | %s%n",
+									rs.getString("accident_id"),
+									rs.getString("address"),
+									rs.getDouble("cost"),
+									getDateFormat().format(rs.getDate("date"))));
+						}
+						return sb.toString();
+					});
+		});
+	}
+
+	// 4
+	public int getAccidentCountLastWeek() {
+		return executeResilientQuery(() -> {
+			String sql = "SELECT COUNT(*) FROM accidents " +
+					"WHERE date BETWEEN CURRENT_DATE - 7 AND CURRENT_DATE";
+			return executeScalarQuery(sql, rs -> rs.getInt(1));
+		});
+	}
+
+	// 5
+	public Map<Integer, Integer> getAccidentCountPerBrigade() {
+		return executeResilientQuery(() -> {
+			String sql = "SELECT brigade_number, COUNT(*) as accident_count " +
+					"FROM accidents GROUP BY brigade_number";
+			return executeQuery(sql, rs -> {
+				Map<Integer, Integer> result = new HashMap<>();
+				while (rs.next()) {
+					result.put(rs.getInt("brigade_number"), rs.getInt("accident_count"));
+				}
+				return result;
+			});
+		});
+	}
+
+	// 6
+	public List<Integer> getBrigadesWithMaxAccidents() {
+		return executeResilientQuery(() -> {
+			String sql = "SELECT brigade_number " +
+					"FROM accidents " +
+					"GROUP BY brigade_number " +
+					"HAVING COUNT(*) >= ALL (SELECT COUNT(*) FROM accidents GROUP BY brigade_number)";
+			return executeQuery(sql, rs -> {
+				List<Integer> result = new ArrayList<>();
+				while (rs.next()) {
+					result.add(rs.getInt("brigade_number"));
+				}
+				return result;
+			});
+		});
+	}
+
+	// 7
+	public Map<String, Integer> getTopBrigadePerAccidentType() {
+		return executeResilientQuery(() -> {
+			String sql = "SELECT a1.type, a1.brigade_number " +
+					"FROM accidents a1 " +
+					"WHERE a1.brigade_number = (SELECT a2.brigade_number " +
+					"                           FROM accidents a2 " +
+					"                           WHERE a2.type = a1.type " +
+					"                           GROUP BY a2.brigade_number " +
+					"                           ORDER BY COUNT(*) DESC " +
+					"                           LIMIT 1) " +
+					"GROUP BY a1.type, a1.brigade_number";
+			return executeQuery(sql, rs -> {
+				Map<String, Integer> result = new HashMap<>();
+				while (rs.next()) {
+					result.put(rs.getString("type"), rs.getInt("brigade_number"));
+				}
+				return result;
+			});
+		});
+	}
+
+	// 8
+	public List<Integer> getInactiveBrigadesLeftJoin() {
+		return executeResilientQuery(() -> {
+			String sql = "SELECT b.number " +
+					"FROM brigades b " +
+					"LEFT JOIN accidents a ON b.number = a.brigade_number " +
+					"WHERE a.id IS NULL";
+			return executeIdListQuery(sql);
+		});
+	}
+
+	public List<Integer> getInactiveBrigadesIn() {
+		return executeResilientQuery(() -> {
+			String sql = "SELECT number FROM brigades " +
+					"WHERE number NOT IN (SELECT brigade_number FROM accidents)";
+			return executeIdListQuery(sql);
+		});
+	}
+
+	public List<Integer> getInactiveBrigadesExists() {
+		return executeResilientQuery(() -> {
+			String sql = "SELECT number FROM brigades b " +
+					"WHERE NOT EXISTS (SELECT 1 FROM accidents a WHERE a.brigade_number = b.number)";
+			return executeIdListQuery(sql);
+		});
+	}
+
+	// 9
+	public List<String> getBrigadesWithActivityStatus() {
+		return executeResilientQuery(() -> {
+			String sql = "SELECT number, 'Найактивніша бригада' AS comment " +
+					"FROM brigades WHERE number = (SELECT brigade_number FROM accidents GROUP BY brigade_number ORDER BY COUNT(*) DESC LIMIT 1) " +
+					"UNION " +
+					"SELECT number, 'Не має активних аварій' AS comment " +
+					"FROM brigades WHERE number NOT IN (SELECT DISTINCT brigade_number FROM accidents WHERE status NOT IN ('Вирішено', 'Відмінено'))";
+			return executeQuery(sql, rs -> {
+				List<String> result = new ArrayList<>();
+				while (rs.next()) {
+					result.add("Бригада " + rs.getInt("number") + ": " + rs.getString("comment"));
+				}
+				return result;
+			});
+		});
+	}
+
 	// Головний метод
 	public static void main(String[] args) {
-		SwingUtilities.invokeLater(() -> new UserInterface(new Main()));
+		new Main();
+		SwingUtilities.invokeLater(() -> userInterface.frame.setVisible(true));
 	}
 }

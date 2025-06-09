@@ -2,6 +2,7 @@ package com.vitaliyrev.courseworkdb.app;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+import java.awt.event.WindowEvent;
 import java.sql.*;
 import java.util.*;
 import java.util.Date;
@@ -12,37 +13,35 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import javax.swing.*;
+
 class MainTest extends DatabaseManagerTestBase {
 	private Main main;
+	private DatabaseManager dbManager;
 
 	@BeforeEach
 	void setUp() throws SQLException {
-		// Create real database manager with test connection
-		DatabaseManager dbManager = new DatabaseManager(
-			System.getProperty("db.url"),
-			System.getProperty("db.user"),
-			System.getProperty("db.password")
+		dbManager = new DatabaseManager(
+				System.getProperty("db.url"),
+				System.getProperty("db.user"),
+				System.getProperty("db.password")
 		);
 		main = new Main(dbManager);
-
-		// Initialize database schema
 		dbManager.initializeDatabase();
 
-		// Start transaction for tests that need it
-		testConnection.setAutoCommit(false);
+		Brigade brigade2 = createTestBrigade(2);
+		Master master = createTestMaster(999, brigade2);
+		main.getMasters().add(master);
 	}
 
 	@AfterEach
 	void tearDown() throws SQLException {
 		if (testConnection != null && !testConnection.isClosed()) {
-			testConnection.rollback();
-			testConnection.setAutoCommit(true);
 			try (Statement stmt = testConnection.createStatement()) {
 				stmt.execute("TRUNCATE TABLE clients, accidents, masters, brigades CASCADE");
-			} finally {
-				testConnection.setAutoCommit(false);
 			}
 		}
+		dbManager.close();
 	}
 
 	private Brigade createTestBrigade(int number) {
@@ -66,7 +65,6 @@ class MainTest extends DatabaseManagerTestBase {
 
 	@Test
 	void shouldSaveAllDataWithMultipleEntries() throws SQLException {
-		// Arrange
 		Brigade brigade1 = createTestBrigade(1);
 		Brigade brigade2 = createTestBrigade(2);
 
@@ -94,11 +92,8 @@ class MainTest extends DatabaseManagerTestBase {
 		main.setClients(clients);
 		main.setAccidents(accidents);
 
-		// Act
 		main.saveAllData();
-		testConnection.commit(); // Commit to make data visible
 
-		// Assert
 		verifyTableCount("brigades", 2);
 		verifyTableCount("masters", 3);
 		verifyTableCount("accidents", 2);
@@ -129,16 +124,12 @@ class MainTest extends DatabaseManagerTestBase {
 
 	@Test
 	void shouldHandleEmptyLists() throws SQLException {
-		// Arrange
 		main.setMasters(new ArrayList<>());
 		main.setClients(new ArrayList<>());
 		main.setAccidents(new ArrayList<>());
 
-		// Act
 		main.saveAllData();
-		testConnection.commit(); // Commit to make data visible
 
-		// Assert
 		verifyTableCount("brigades", 0);
 		verifyTableCount("masters", 0);
 		verifyTableCount("accidents", 0);
@@ -147,13 +138,12 @@ class MainTest extends DatabaseManagerTestBase {
 
 	@Test
 	void shouldCalculateMasterSalaryCorrectly() {
-		// Arrange
 		Brigade brigade1 = createTestBrigade(1);
 		Brigade brigade2 = createTestBrigade(2);
 
 		List<Master> masters = List.of(
-				createTestMaster(1, brigade1), // Qualification 1
-				createTestMaster(2, brigade2)  // Qualification 2
+				createTestMaster(1, brigade1),
+				createTestMaster(2, brigade2)
 		);
 
 		Date now = new Date();
@@ -191,7 +181,6 @@ class MainTest extends DatabaseManagerTestBase {
 
 	@Test
 	void shouldCountBrigadesCorrectly() {
-		// Arrange
 		Brigade brigade1 = createTestBrigade(1);
 		Brigade brigade2 = createTestBrigade(2);
 
@@ -203,13 +192,11 @@ class MainTest extends DatabaseManagerTestBase {
 
 		main.setMasters(masters);
 
-		// Act & Assert
 		assertEquals(2, main.getBrigadeCount());
 	}
 
 	@Test
 	void shouldCalculateAverageAccidentCost() {
-		// Arrange
 		Brigade brigade = createTestBrigade(1);
 
 		Date now = new Date();
@@ -229,18 +216,15 @@ class MainTest extends DatabaseManagerTestBase {
 
 		main.setAccidents(accidents);
 
-		// Act & Assert
 		assertEquals(200.0, main.getAverageAccidentCost(), 0.01);
 	}
 
 	@Test
 	void shouldHandleNullValuesGracefully() {
-		// Arrange
 		main.setMasters(null);
 		main.setClients(null);
 		main.setAccidents(null);
 
-		// Act & Assert
 		assertDoesNotThrow(() -> main.saveAllData());
 		assertEquals(0, main.getBrigadeCount());
 		assertEquals(0.0, main.getAverageAccidentCost(), 0.01);
@@ -248,9 +232,8 @@ class MainTest extends DatabaseManagerTestBase {
 
 	@Test
 	void shouldCalculateSalaryForDateRange() {
-		// Arrange
 		Brigade brigade = createTestBrigade(1);
-		Master master = createTestMaster(1, brigade); // Qualification 1
+		Master master = createTestMaster(1, brigade);
 
 		Date now = new Date();
 		Date past = new Date(now.getTime() - 1000000);
@@ -267,11 +250,279 @@ class MainTest extends DatabaseManagerTestBase {
 		main.setMasters(List.of(master));
 		main.setAccidents(List.of(relevantAccident, irrelevantAccident));
 
-		// Act
 		double salary = main.getMasterSalaryBetweenDates(1, past, now);
 
-		// Assert - Should only include one accident
 		assertEquals(1500.0, salary, 0.01);
+	}
+
+	@Test
+	void testGetMastersWithBrigadeInfo() {
+		Brigade brigade1 = createTestBrigade(1);
+		Brigade brigade2 = createTestBrigade(2);
+
+		List<Master> masters = List.of(
+				createTestMaster(1, brigade1),
+				createTestMaster(2, brigade1),
+				createTestMaster(3, brigade2)
+		);
+
+		main.setMasters(masters);
+		main.saveAllData();
+
+		String result = main.getMastersWithBrigadeInfo();
+
+		assertNotNull(result);
+		assertTrue(result.contains("Мастер1 | Бригада: 1 | Статус: Зайнятий"));
+		assertTrue(result.contains("Мастер2 | Бригада: 1 | Статус: Зайнятий"));
+		assertTrue(result.contains("Мастер3 | Бригада: 2 | Статус: Зайнятий"));
+	}
+
+	@Test
+	void testFindClientsByNamePattern() {
+		Brigade brigade = createTestBrigade(1);
+
+		Date now = new Date();
+		Date accidentTime1 = new Date(now.getTime() - 500000);
+		Date accidentTime2 = new Date(now.getTime() - 450000);
+
+		List<Accident> accidents = List.of(
+				createTestAccident(1, "1-ACC", brigade, accidentTime1),
+				createTestAccident(2, "2-ACC", brigade, accidentTime2)
+		);
+
+		List<Client> clients = List.of(
+				createTestClient(1, "1-ACC", 5),
+				createTestClient(2, "2-ACC", 5)
+		);
+
+		main.setAccidents(accidents);
+		main.setClients(clients);
+		main.saveAllData();
+
+		String result = main.findClientsByNamePattern("Клієнт1");
+
+		assertNotNull(result);
+		assertTrue(result.contains("Клієнт1 | Тел: 0987654321 | Відділ: 5"));
+	}
+
+	@Test
+	void testGetAccidentsBetweenDates() {
+		Brigade brigade = createTestBrigade(1);
+
+		Date now = new Date();
+		Date accidentTime1 = new Date(now.getTime() - 500000);
+		Date accidentTime2 = new Date(now.getTime() - 450000);
+
+		List<Accident> accidents = List.of(
+				createTestAccident(1, "1-ACC", brigade, accidentTime1),
+				createTestAccident(2, "2-ACC", brigade, accidentTime2)
+		);
+
+		main.setAccidents(accidents);
+		main.saveAllData();
+
+		String result = main.getAccidentsBetweenDates(accidentTime1, now);
+
+		assertNotNull(result);
+		assertTrue(result.contains("1-ACC | АдресаАварії1 | 100,00 грн | " + main.getDateFormat().format(accidentTime1)));
+		assertTrue(result.contains("2-ACC | АдресаАварії2 | 200,00 грн | " + main.getDateFormat().format(accidentTime2)));
+	}
+
+	@Test
+	void testGetAccidentCountLastWeek() {
+		Brigade brigade = createTestBrigade(1);
+
+		Date now = new Date();
+		Date accidentTime1 = new Date(now.getTime() - 500000);
+		Date accidentTime2 = new Date(now.getTime() - 450000);
+
+		List<Accident> accidents = List.of(
+				createTestAccident(1, "1-ACC", brigade, accidentTime1),
+				createTestAccident(2, "2-ACC", brigade, accidentTime2)
+		);
+
+		main.setAccidents(accidents);
+		main.saveAllData();
+
+		int result = main.getAccidentCountLastWeek();
+
+		assertEquals(2, result);
+	}
+
+	@Test
+	void testGetAccidentCountPerBrigade() {
+		Brigade brigade1 = createTestBrigade(1);
+		Brigade brigade2 = createTestBrigade(2);
+
+		Date now = new Date();
+		Date accidentTime1 = new Date(now.getTime() - 500000);
+		Date accidentTime2 = new Date(now.getTime() - 450000);
+
+		List<Accident> accidents = List.of(
+				createTestAccident(1, "1-ACC", brigade1, accidentTime1),
+				createTestAccident(2, "2-ACC", brigade1, accidentTime2),
+				createTestAccident(3, "3-ACC", brigade2, accidentTime1)
+		);
+
+		main.setAccidents(accidents);
+		main.saveAllData();
+
+		Map<Integer, Integer> result = main.getAccidentCountPerBrigade();
+
+		assertNotNull(result);
+		assertEquals(2, (int) result.get(1));
+		assertEquals(1, (int) result.get(2));
+	}
+
+	@Test
+	void testGetBrigadesWithMaxAccidents() {
+		Brigade brigade1 = createTestBrigade(1);
+		Brigade brigade2 = createTestBrigade(2);
+
+		Date now = new Date();
+		Date accidentTime1 = new Date(now.getTime() - 500000);
+		Date accidentTime2 = new Date(now.getTime() - 450000);
+
+		List<Accident> accidents = List.of(
+				createTestAccident(1, "1-ACC", brigade1, accidentTime1),
+				createTestAccident(2, "2-ACC", brigade1, accidentTime2),
+				createTestAccident(3, "3-ACC", brigade2, accidentTime1)
+		);
+
+		main.setAccidents(accidents);
+		main.saveAllData();
+
+		List<Integer> result = main.getBrigadesWithMaxAccidents();
+
+		assertNotNull(result);
+		assertTrue(result.contains(1));
+	}
+
+	@Test
+	void testGetTopBrigadePerAccidentType() {
+		Brigade brigade1 = createTestBrigade(1);
+		Brigade brigade2 = createTestBrigade(2);
+
+		Date now = new Date();
+		Date accidentTime1 = new Date(now.getTime() - 500000);
+		Date accidentTime2 = new Date(now.getTime() - 450000);
+
+		List<Accident> accidents = List.of(
+				createTestAccident(1, "1-ACC", brigade1, accidentTime1),
+				createTestAccident(2, "2-ACC", brigade1, accidentTime2),
+				createTestAccident(3, "3-ACC", brigade2, accidentTime1)
+		);
+
+		accidents.get(0).setType("Тип1");
+		accidents.get(1).setType("Тип1");
+		accidents.get(2).setType("Тип2");
+
+		main.setAccidents(accidents);
+		main.saveAllData();
+
+		Map<String, Integer> result = main.getTopBrigadePerAccidentType();
+
+		assertNotNull(result);
+		assertEquals(1, (int) result.get("Тип1"));
+		assertEquals(2, (int) result.get("Тип2"));
+	}
+
+	@Test
+	void testGetInactiveBrigadesLeftJoin() {
+		Brigade brigade1 = createTestBrigade(1);
+		Brigade brigade2 = createTestBrigade(2);
+
+		Date now = new Date();
+		Date accidentTime1 = new Date(now.getTime() - 500000);
+
+		List<Accident> accidents = List.of(
+				createTestAccident(1, "1-ACC", brigade1, accidentTime1)
+		);
+
+		main.setAccidents(accidents);
+		main.saveAllData();
+
+		// Act
+		List<Integer> result = main.getInactiveBrigadesLeftJoin();
+
+		// Assert
+		assertNotNull(result);
+		assertTrue(result.contains(2));
+	}
+
+	@Test
+	void testGetInactiveBrigadesIn() {
+		// Arrange
+		Brigade brigade1 = createTestBrigade(1);
+		Brigade brigade2 = createTestBrigade(2);
+
+		Date now = new Date();
+		Date accidentTime1 = new Date(now.getTime() - 500000);
+
+		List<Accident> accidents = List.of(
+				createTestAccident(1, "1-ACC", brigade1, accidentTime1)
+		);
+
+		main.setAccidents(accidents);
+		main.saveAllData();
+
+		// Act
+		List<Integer> result = main.getInactiveBrigadesIn();
+
+		// Assert
+		assertNotNull(result);
+		assertTrue(result.contains(2));
+	}
+
+	@Test
+	void testGetInactiveBrigadesExists() {
+		// Arrange
+		Brigade brigade1 = createTestBrigade(1);
+		Brigade brigade2 = createTestBrigade(2);
+
+		Date now = new Date();
+		Date accidentTime1 = new Date(now.getTime() - 500000);
+
+		List<Accident> accidents = List.of(
+				createTestAccident(1, "1-ACC", brigade1, accidentTime1)
+		);
+
+		main.setAccidents(accidents);
+		main.saveAllData();
+
+		// Act
+		List<Integer> result = main.getInactiveBrigadesExists();
+
+		// Assert
+		assertNotNull(result);
+		assertTrue(result.contains(2));
+	}
+
+	@Test
+	void testGetBrigadesWithActivityStatus() {
+		// Arrange
+		Brigade brigade1 = createTestBrigade(1);
+		Brigade brigade2 = createTestBrigade(2);
+
+		Date now = new Date();
+		Date accidentTime1 = new Date(now.getTime() - 500000);
+
+		List<Accident> accidents = List.of(
+				createTestAccident(1, "1-ACC", brigade1, accidentTime1)
+		);
+
+		accidents.getFirst().setStatus("Вирішено");
+
+		main.setAccidents(accidents);
+		main.saveAllData();
+
+		// Act
+		List<String> result = main.getBrigadesWithActivityStatus();
+
+		// Assert
+		assertNotNull(result);
+		assertTrue(result.contains("Бригада 1: Найактивніша бригада"));
+		assertTrue(result.contains("Бригада 2: Не має активних аварій"));
 	}
 
 	private void verifyTableCount(String tableName, int expectedCount) throws SQLException {

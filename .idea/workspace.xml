@@ -8,14 +8,26 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="95a69f16-a790-40cd-8ee2-a8de1e3cf5c5" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/db/DatabaseManagerTestBase.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/gradle.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/gradle.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/ui/AccidentsTabUITest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/ui/ClientsTabUITest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/ui/ConnectionStatusUITest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/ui/MastersTabUITest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/ui/ReportsTabUITest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/ui/abc/BaseUITest.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/ui/abc/GUITestExtension.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/settings.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/settings.gradle" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/vitaliyrev/courseworkdb/app/Brigade.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/vitaliyrev/courseworkdb/app/Brigade.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/vitaliyrev/courseworkdb/app/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/vitaliyrev/courseworkdb/app/Main.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/vitaliyrev/courseworkdb/app/UserInterface.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/vitaliyrev/courseworkdb/app/UserInterface.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/vitaliyrev/courseworkdb/app/db/DatabaseManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/vitaliyrev/courseworkdb/app/db/DatabaseManager.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/AccidentTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/AccidentTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/BrigadeTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/BrigadeTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/ClientTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/ClientTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/EntityTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/EntityTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/MainTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/MainTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/MasterTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/MasterTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/UserInterfaceTest.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/db/DatabaseManagerTestBase.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/db/DatabaseManagerTestBase.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -109,6 +121,10 @@
   &quot;keyToString&quot;: {
     &quot;Application.Main.executor&quot;: &quot;Run&quot;,
     &quot;Downloaded.Files.Path.Enabled&quot;: &quot;false&quot;,
+    &quot;Gradle.AccidentsTabUITest.testAccidentReport.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.AccidentsTabUITest.testAddAccident.executor&quot;: &quot;Debug&quot;,
+    &quot;Gradle.ClientsTabUITest.testListClients.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.ConnectionStatusUITest.testReconnectFlow.executor&quot;: &quot;Run&quot;,
     &quot;Gradle.CourseWorkDB [:com.vitaliyrev.courseworkdb.app.Main.main()].executor&quot;: &quot;Run&quot;,
     &quot;Gradle.CourseWorkDB [assemble].executor&quot;: &quot;Run&quot;,
     &quot;Gradle.CourseWorkDB [build].executor&quot;: &quot;Run&quot;,
@@ -116,14 +132,18 @@
     &quot;Gradle.CourseWorkDB [clean].executor&quot;: &quot;Run&quot;,
     &quot;Gradle.CourseWorkDB [compileJava].executor&quot;: &quot;Run&quot;,
     &quot;Gradle.CourseWorkDB [compileTestJava].executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.CourseWorkDB [jar].executor&quot;: &quot;Run&quot;,
     &quot;Gradle.CourseWorkDB [processResources].executor&quot;: &quot;Run&quot;,
     &quot;Gradle.CourseWorkDB [run].executor&quot;: &quot;Run&quot;,
     &quot;Gradle.CourseWorkDB [testClasses].executor&quot;: &quot;Run&quot;,
     &quot;Gradle.CourseWorkDB [test].executor&quot;: &quot;Run&quot;,
     &quot;Gradle.CourseWorkDB.executor&quot;: &quot;Run&quot;,
     &quot;Gradle.D:/IDEA_Projects/Polytech/Databases/CourseWorkDB/build.gradle.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.Download Sources.executor&quot;: &quot;Run&quot;,
     &quot;Gradle.MainTest.shouldCalculateMasterSalaryCorrectly.executor&quot;: &quot;Debug&quot;,
     &quot;Gradle.MainTest.shouldCalculateSalaryForDateRange.executor&quot;: &quot;Debug&quot;,
+    &quot;Gradle.MastersTabUITest.testAddMaster.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.ReportsTabUITest.executor&quot;: &quot;Run&quot;,
     &quot;JAR Application.CourseWorkDB-1.0-SNAPSHOT.jar.executor&quot;: &quot;Run&quot;,
     &quot;JUnit.All in CourseWorkDB.src.main.test (1).executor&quot;: &quot;Run&quot;,
     &quot;JUnit.All in CourseWorkDB.src.main.test.executor&quot;: &quot;Run&quot;,
@@ -140,7 +160,7 @@
     &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
     &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
     &quot;run.code.analysis.last.selected.profile&quot;: &quot;pProject Default&quot;,
-    &quot;settings.editor.selected.configurable&quot;: &quot;reference.settingsdialog.project.gradle&quot;
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.pluginManager&quot;
   }
 }</component>
   <component name="RecentsManager">
@@ -150,51 +170,55 @@
     </key>
   </component>
   <component name="RunManager" selected="Gradle.CourseWorkDB [test]">
-    <configuration name="CourseWorkDB [clean]" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
+    <configuration name="AccidentsTabUITest.testAddAccident" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
       <ExternalSystemSettings>
         <option name="executionName" />
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
         <option name="externalSystemIdString" value="GRADLE" />
-        <option name="scriptParameters" />
+        <option name="scriptParameters" value="" />
         <option name="taskDescriptions">
           <list />
         </option>
         <option name="taskNames">
           <list>
-            <option value="clean" />
+            <option value=":test" />
+            <option value="--tests" />
+            <option value="&quot;com.vitaliyrev.courseworkdb.app.ui.AccidentsTabUITest.testAddAccident&quot;" />
           </list>
         </option>
         <option name="vmOptions" />
       </ExternalSystemSettings>
-      <ExternalSystemDebugServerProcess>true</ExternalSystemDebugServerProcess>
+      <ExternalSystemDebugServerProcess>false</ExternalSystemDebugServerProcess>
       <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
       <DebugAllEnabled>false</DebugAllEnabled>
-      <RunAsTest>false</RunAsTest>
+      <RunAsTest>true</RunAsTest>
       <method v="2" />
     </configuration>
-    <configuration name="CourseWorkDB [compileJava]" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
+    <configuration name="ClientsTabUITest.testListClients" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
       <ExternalSystemSettings>
         <option name="executionName" />
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
         <option name="externalSystemIdString" value="GRADLE" />
-        <option name="scriptParameters" />
+        <option name="scriptParameters" value="" />
         <option name="taskDescriptions">
           <list />
         </option>
         <option name="taskNames">
           <list>
-            <option value="compileJava" />
+            <option value=":test" />
+            <option value="--tests" />
+            <option value="&quot;com.vitaliyrev.courseworkdb.app.ui.ClientsTabUITest.testListClients&quot;" />
           </list>
         </option>
         <option name="vmOptions" />
       </ExternalSystemSettings>
-      <ExternalSystemDebugServerProcess>true</ExternalSystemDebugServerProcess>
+      <ExternalSystemDebugServerProcess>false</ExternalSystemDebugServerProcess>
       <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
       <DebugAllEnabled>false</DebugAllEnabled>
-      <RunAsTest>false</RunAsTest>
+      <RunAsTest>true</RunAsTest>
       <method v="2" />
     </configuration>
-    <configuration name="CourseWorkDB [compileTestJava]" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
+    <configuration name="CourseWorkDB [run]" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
       <ExternalSystemSettings>
         <option name="executionName" />
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
@@ -205,29 +229,7 @@
         </option>
         <option name="taskNames">
           <list>
-            <option value="compileTestJava" />
-          </list>
-        </option>
-        <option name="vmOptions" />
-      </ExternalSystemSettings>
-      <ExternalSystemDebugServerProcess>true</ExternalSystemDebugServerProcess>
-      <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
-      <DebugAllEnabled>false</DebugAllEnabled>
-      <RunAsTest>false</RunAsTest>
-      <method v="2" />
-    </configuration>
-    <configuration name="CourseWorkDB [processResources]" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
-      <ExternalSystemSettings>
-        <option name="executionName" />
-        <option name="externalProjectPath" value="$PROJECT_DIR$" />
-        <option name="externalSystemIdString" value="GRADLE" />
-        <option name="scriptParameters" />
-        <option name="taskDescriptions">
-          <list />
-        </option>
-        <option name="taskNames">
-          <list>
-            <option value="processResources" />
+            <option value="run" />
           </list>
         </option>
         <option name="vmOptions" />
@@ -243,7 +245,7 @@
         <option name="executionName" />
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
         <option name="externalSystemIdString" value="GRADLE" />
-        <option name="scriptParameters" />
+        <option name="scriptParameters" value="" />
         <option name="taskDescriptions">
           <list />
         </option>
@@ -260,6 +262,30 @@
       <RunAsTest>false</RunAsTest>
       <method v="2" />
     </configuration>
+    <configuration name="ReportsTabUITest" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
+      <ExternalSystemSettings>
+        <option name="executionName" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="externalSystemIdString" value="GRADLE" />
+        <option name="scriptParameters" value="" />
+        <option name="taskDescriptions">
+          <list />
+        </option>
+        <option name="taskNames">
+          <list>
+            <option value=":test" />
+            <option value="--tests" />
+            <option value="&quot;com.vitaliyrev.courseworkdb.app.ui.ReportsTabUITest&quot;" />
+          </list>
+        </option>
+        <option name="vmOptions" />
+      </ExternalSystemSettings>
+      <ExternalSystemDebugServerProcess>false</ExternalSystemDebugServerProcess>
+      <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
+      <DebugAllEnabled>false</DebugAllEnabled>
+      <RunAsTest>true</RunAsTest>
+      <method v="2" />
+    </configuration>
     <configuration default="true" type="JetRunConfigurationType">
       <module name="CourseWorkDB" />
       <method v="2">
@@ -274,19 +300,19 @@
       </method>
     </configuration>
     <list>
-      <item itemvalue="Gradle.CourseWorkDB [compileJava]" />
-      <item itemvalue="Gradle.CourseWorkDB [compileTestJava]" />
-      <item itemvalue="Gradle.CourseWorkDB [processResources]" />
+      <item itemvalue="Gradle.AccidentsTabUITest.testAddAccident" />
+      <item itemvalue="Gradle.ClientsTabUITest.testListClients" />
+      <item itemvalue="Gradle.ReportsTabUITest" />
       <item itemvalue="Gradle.CourseWorkDB [test]" />
-      <item itemvalue="Gradle.CourseWorkDB [clean]" />
+      <item itemvalue="Gradle.CourseWorkDB [run]" />
     </list>
     <recent_temporary>
       <list>
         <item itemvalue="Gradle.CourseWorkDB [test]" />
-        <item itemvalue="Gradle.CourseWorkDB [clean]" />
-        <item itemvalue="Gradle.CourseWorkDB [compileTestJava]" />
-        <item itemvalue="Gradle.CourseWorkDB [compileJava]" />
-        <item itemvalue="Gradle.CourseWorkDB [processResources]" />
+        <item itemvalue="Gradle.CourseWorkDB [run]" />
+        <item itemvalue="Gradle.ReportsTabUITest" />
+        <item itemvalue="Gradle.ClientsTabUITest.testListClients" />
+        <item itemvalue="Gradle.AccidentsTabUITest.testAddAccident" />
       </list>
     </recent_temporary>
   </component>
@@ -308,75 +334,11 @@
           <properties class="org.opentest4j.AssertionFailedError" package="org.opentest4j" />
           <option name="timeStamp" value="2" />
         </breakpoint>
-        <line-breakpoint type="java-line">
-          <url>file://$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/MainTest.java</url>
-          <line>255</line>
-          <option name="timeStamp" value="5" />
-        </line-breakpoint>
-        <line-breakpoint type="java-line">
-          <url>file://$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/MainTest.java</url>
-          <line>252</line>
-          <option name="timeStamp" value="6" />
-        </line-breakpoint>
-        <line-breakpoint type="java-line">
-          <url>file://$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/MainTest.java</url>
-          <line>251</line>
-          <option name="timeStamp" value="7" />
-        </line-breakpoint>
-        <line-breakpoint type="java-line">
-          <url>file://$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/MainTest.java</url>
-          <line>261</line>
-          <option name="timeStamp" value="27" />
-        </line-breakpoint>
-        <line-breakpoint type="java-line">
-          <url>file://$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/MainTest.java</url>
-          <line>260</line>
-          <option name="timeStamp" value="28" />
-        </line-breakpoint>
-        <line-breakpoint type="java-line">
-          <url>file://$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/MainTest.java</url>
-          <line>263</line>
-          <option name="timeStamp" value="29" />
-        </line-breakpoint>
-        <line-breakpoint type="java-line">
-          <url>file://$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/MainTest.java</url>
-          <line>264</line>
-          <option name="timeStamp" value="31" />
-        </line-breakpoint>
-        <line-breakpoint type="java-line">
-          <url>file://$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/MainTest.java</url>
-          <line>271</line>
-          <option name="timeStamp" value="32" />
-        </line-breakpoint>
-        <line-breakpoint type="java-line">
-          <url>file://$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/MainTest.java</url>
-          <line>274</line>
-          <option name="timeStamp" value="33" />
-        </line-breakpoint>
-        <line-breakpoint type="java-line">
-          <url>file://$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/MainTest.java</url>
-          <line>188</line>
-          <option name="timeStamp" value="36" />
-        </line-breakpoint>
-        <line-breakpoint type="java-line">
-          <url>file://$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/MainTest.java</url>
-          <line>187</line>
-          <option name="timeStamp" value="37" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/MainTest.java</url>
-          <line>185</line>
-          <option name="timeStamp" value="42" />
-        </line-breakpoint>
-        <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/MainTest.java</url>
-          <line>184</line>
-          <option name="timeStamp" value="43" />
-        </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>
     <watches-manager>
       <configuration name="GradleRunConfiguration">
+        <watch expression="main.dbManager" />
         <watch expression="main.dbManager" />
       </configuration>
     </watches-manager>

@@ -1,9 +1,7 @@
 package com.vitaliyrev.courseworkdb.app;
 
 import static org.junit.jupiter.api.Assertions.*;
-
 import java.util.Date;
-
 import org.junit.jupiter.api.Test;
 
 class AccidentTest {

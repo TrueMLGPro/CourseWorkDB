@@ -1,12 +1,11 @@
 package com.vitaliyrev.courseworkdb.app;
 
 import static org.junit.jupiter.api.Assertions.*;
-
 import org.junit.jupiter.api.Test;
-
 import java.util.Date;
 
 class ClientTest {
+
 	@Test
 	void clientShouldStoreAllProperties() {
 		Client client = new Client(1, "1-AbCdEfG", "Василь Стасенко", "вул. Приморська 43", "0987654321", 1);

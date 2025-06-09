@@ -1,10 +1,10 @@
 package com.vitaliyrev.courseworkdb.app;
 
 import static org.junit.jupiter.api.Assertions.*;
-
 import org.junit.jupiter.api.Test;
 
 class EntityTest {
+
 	@Test
 	void entityShouldStoreIndex() {
 		Entity entity = new TestEntity(5);
