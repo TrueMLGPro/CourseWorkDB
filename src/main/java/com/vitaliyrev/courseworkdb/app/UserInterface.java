@@ -1,24 +1,20 @@
 package com.vitaliyrev.courseworkdb.app;
 
 import javax.swing.*;
-import java.awt.BorderLayout;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.GridLayout;
-import java.awt.Insets;
+import java.awt.*;
 import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.sql.SQLException;
 import java.text.ParseException;
+import java.util.List;
 import java.util.*;
 
 // Клас "Інтерфейс користувача"
 public class UserInterface {
 	private final Main main; // Посилання на головний об'єкт програми
-	private JFrame frame; // Основне вікно програми
+	public JFrame frame; // Основне вікно програми
 	private final JTextArea resultArea; // Текстова область для виводу результатів
+	private JLabel connectionStatusLabel; // Статус підключення до БД
 	private JTextField masterStartDateField; // Поле для введення початкової дати для майстрів
 	private JTextField masterEndDateField; // Поле для введення кінцевої дати для майстрів
 	private JTextField addMasterNameField; // Поле для введення імені та прізвища майстра
@@ -43,6 +39,43 @@ public class UserInterface {
 	private JTextField addClientPhoneField; // Поле для введення номеру телефону клієнта
 	private JComboBox<String> addClientDepartmentField; // Вибіркове поле для вибору номера відділення клієнта
 	private JComboBox<String> clientAccidentIdField; // Вибіркове поле для вибору ID аварії клієнта
+	private JTextField reportClientNameField; // Поле для введення кінцевої дати для аварій
+	private JTextField reportStartDateField; // Поле для введення початкової дати для звітів
+	private JTextField reportEndDateField; // Поле для введення кінцевої дати для звітів
+
+	private JButton countMastersButton; // Кнопка для підрахунку кількості майстрів
+	private JButton masterSalaryButton; // Кнопка для розрахунку зарплати майстра
+	private JButton countBrigadesButton; // Кнопка для підрахунку кількості бригад
+	private JButton addMasterButton; // Кнопка для додавання майстра
+	private JButton deleteMasterButton; // Кнопка для видалення майстра
+	private JButton updateMasterButton; // Кнопка для оновлення даних про майстра
+	private JButton listMastersButton; // Кнопка для відображення списку майстрів
+	private JButton exitButton; // Кнопка виходу
+	private JButton countAccidentsButton; // Кнопка для підрахунку кількості аварій
+	private JButton averageCostButton; // Кнопка для розрахунку середньої вартості аварії
+	private JButton accidentTypesButton; // Кнопка для відображення типів аварій
+	private JButton addAccidentButton; // Кнопка для додавання аварії
+	private JButton deleteAccidentButton; // Кнопка для видалення аварії
+	private JButton deleteAccidentAndClientButton; // Кнопка для видалення аварії та клієнта
+	private JButton listAccidentsButton; // Кнопка для відображення списку аварій
+	private JButton updateAccidentButton; // Кнопка для оновлення даних про аварію
+	private JButton countClientsButton; // Кнопка для підрахунку кількості клієнтів
+	private JButton addClientButton; // Кнопка для додавання клієнта
+	private JButton deleteClientButton; // Кнопка для видалення клієнта
+	private JButton deleteClientAndAccidentButton; // Кнопка для видалення клієнта та аварії
+	private JButton updateClientButton; // Кнопка для оновлення даних про клієнта
+	private JButton listClientsButton; // Кнопка для відображення списку клієнтів
+	private JButton mastersWithBrigadeInfoButton; // Кнопка для відображення майстрів з інформацією про бригади
+	private JButton findClientsByNameButton; // Кнопка для пошуку клієнтів за ім'ям
+	private JButton accidentsBetweenDatesButton; // Кнопка для відображення аварій в інтервалі дат
+	private JButton accidentCountLastWeekButton; // Кнопка для відображення кількості аварій за минулий тиждень
+	private JButton accidentCountPerBrigadeButton; // Кнопка для відображення кількості аварій на бригаду
+	private JButton maxAccidentBrigadesButton; // Кнопка для відображення бригад з максимальnoю кількістю аварій
+	private JButton topBrigadePerTypeButton; // Кнопка для відображення найактивніших бригад за типами аварій
+	private JButton inactiveBrigadesLeftJoinButton; // Кнопка для відображення неактивних бригад (LEFT JOIN)
+	private JButton inactiveBrigadesInButton; // Кнопка для відображення неактивних бригад (NOT IN)
+	private JButton inactiveBrigadesExistsButton; // Кнопка для відображення неактивних бригад (EXISTS)
+	private JButton brigadeActivityStatusButton; // Кнопка для відображення статусу активності бригад
 
 	private enum FIELD_TYPES {
 		MASTER_FIELD, CLIENT_FIELD, ACCIDENT_FIELD
@@ -52,6 +85,7 @@ public class UserInterface {
 		this.main = main;
 		this.resultArea = createResultsTextArea(); // Створення текстової області для результатів
 		createAndShowGUI(); // Створення та відображення графічного інтерфейсу
+		initComponentNames();
 	}
 
 	private void createAndShowGUI() {
@@ -64,11 +98,17 @@ public class UserInterface {
 		tabbedPane.addTab("Майстри", createMastersTab());
 		tabbedPane.addTab("Клієнти", createClientsTab());
 		tabbedPane.addTab("Аварії", createAccidentsTab());
+		tabbedPane.addTab("Звіти", createReportsTab());
 
 		JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, tabbedPane, createResultsPanel());
 		splitPane.setResizeWeight(0.5);
-
 		frame.add(splitPane, BorderLayout.CENTER);
+
+		JPanel statusPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+		connectionStatusLabel = new JLabel("Connecting...");
+		statusPanel.add(connectionStatusLabel);
+		frame.add(statusPanel, BorderLayout.SOUTH);
+
 		frame.pack();
 		Dimension windowDimens = new Dimension(frame.getWidth() + frame.getWidth() / 2, frame.getHeight() + frame.getHeight() / 4);
 		frame.setMinimumSize(windowDimens);
@@ -81,7 +121,7 @@ public class UserInterface {
 			}
 		});
 
-		frame.setVisible(true);
+		updateConnectionStatus();
 	}
 
 	private JPanel createMastersTab() {
@@ -91,14 +131,14 @@ public class UserInterface {
 		JPanel buttonPanel = new JPanel();
 		buttonPanel.setLayout(new GridLayout(8, 1));
 
-		JButton countMastersButton = new JButton("Кількість майстрів");
-		JButton masterSalaryButton = new JButton("Заробіток майстра з... по...");
-		JButton countBrigadesButton = new JButton("Кількість бригад");
-		JButton addMasterButton = new JButton("Додати майстра");
-		JButton deleteMasterButton = new JButton("Видалити майстра");
-		JButton updateMasterButton = new JButton("Оновити майстра");
-		JButton listMastersButton = new JButton("Список майстрів");
-		JButton exitButton = new JButton("Вихід");
+		countMastersButton = new JButton("Кількість майстрів");
+		masterSalaryButton = new JButton("Заробіток майстра з... по...");
+		countBrigadesButton = new JButton("Кількість бригад");
+		addMasterButton = new JButton("Додати майстра");
+		deleteMasterButton = new JButton("Видалити майстра");
+		updateMasterButton = new JButton("Оновити майстра");
+		listMastersButton = new JButton("Список майстрів");
+		exitButton = new JButton("Вихід");
 
 		Dimension buttonSize = new Dimension(250, 20);
 		countMastersButton.setPreferredSize(buttonSize);
@@ -183,15 +223,15 @@ public class UserInterface {
 		JPanel buttonPanel = new JPanel();
 		buttonPanel.setLayout(new GridLayout(9, 1));
 
-		JButton countAccidentsButton = new JButton("Кількість аварій з... по...");
-		JButton averageCostButton = new JButton("Середня вартість усунення аварії");
-		JButton accidentTypesButton = new JButton("Типи аварій у записах");
-		JButton addAccidentButton = new JButton("Додати аварію");
-		JButton deleteAccidentButton = new JButton("Видалити аварію");
-		JButton deleteAccidentAndClientButton = new JButton("Видалити аварію та клієнта");
-		JButton listAccidentsButton = new JButton("Список аварій");
-		JButton updateAccidentButton = new JButton("Оновити аварію");
-		JButton exitButton = new JButton("Вихід");
+		countAccidentsButton = new JButton("Кількість аварій з... по...");
+		averageCostButton = new JButton("Середня вартість усунення аварії");
+		accidentTypesButton = new JButton("Типи аварій у записах");
+		addAccidentButton = new JButton("Додати аварію");
+		deleteAccidentButton = new JButton("Видалити аварію");
+		deleteAccidentAndClientButton = new JButton("Видалити аварію та клієнта");
+		listAccidentsButton = new JButton("Список аварій");
+		updateAccidentButton = new JButton("Оновити аварію");
+		exitButton = new JButton("Вихід");
 
 		Dimension buttonSize = new Dimension(250, 20);
 		countAccidentsButton.setPreferredSize(buttonSize);
@@ -275,13 +315,13 @@ public class UserInterface {
 		JPanel buttonPanel = new JPanel();
 		buttonPanel.setLayout(new GridLayout(7, 1));
 
-		JButton countClientsButton = new JButton("Кількість клієнтів");
-		JButton addClientButton = new JButton("Додати клієнта");
-		JButton deleteClientButton = new JButton("Видалити клієнта");
-		JButton deleteClientAndAccidentButton = new JButton("Видалити клієнта та аварію");
-		JButton updateClientButton = new JButton("Оновити клієнта");
-		JButton listClientsButton = new JButton("Список клієнтів");
-		JButton exitButton = new JButton("Вихід");
+		countClientsButton = new JButton("Кількість клієнтів");
+		addClientButton = new JButton("Додати клієнта");
+		deleteClientButton = new JButton("Видалити клієнта");
+		deleteClientAndAccidentButton = new JButton("Видалити клієнта та аварію");
+		updateClientButton = new JButton("Оновити клієнта");
+		listClientsButton = new JButton("Список клієнтів");
+		exitButton = new JButton("Вихід");
 
 		Dimension buttonSize = new Dimension(250, 20);
 		countClientsButton.setPreferredSize(buttonSize);
@@ -346,6 +386,158 @@ public class UserInterface {
 		exitButton.addActionListener(e -> exitApplication()); // Обробка натискання кнопки "Вихід"
 
 		return panel;
+	}
+
+	private JPanel createReportsTab() {
+		JPanel panel = new JPanel();
+		panel.setLayout(new BorderLayout());
+
+		JPanel buttonPanel = new JPanel();
+		buttonPanel.setLayout(new GridLayout(11, 1));
+
+		mastersWithBrigadeInfoButton = new JButton("Майстри з інфо про бригади");
+		findClientsByNameButton = new JButton("Пошук клієнтів за іменем");
+		accidentsBetweenDatesButton = new JButton("Аварії за період");
+		accidentCountLastWeekButton = new JButton("Кількість аварій за тиждень");
+		accidentCountPerBrigadeButton = new JButton("Аварії по бригадах");
+		maxAccidentBrigadesButton = new JButton("Бригади з найбільше аварій");
+		topBrigadePerTypeButton = new JButton("Найактивніші бригади по типах");
+		inactiveBrigadesLeftJoinButton = new JButton("Неактивні бригади (LEFT JOIN)");
+		inactiveBrigadesInButton = new JButton("Неактивні бригади (NOT IN)");
+		inactiveBrigadesExistsButton = new JButton("Неактивні бригади (EXISTS)");
+		brigadeActivityStatusButton = new JButton("Статус активності бригад");
+
+		Dimension buttonSize = new Dimension(250, 20);
+		mastersWithBrigadeInfoButton.setPreferredSize(buttonSize);
+		findClientsByNameButton.setPreferredSize(buttonSize);
+		accidentsBetweenDatesButton.setPreferredSize(buttonSize);
+		accidentCountLastWeekButton.setPreferredSize(buttonSize);
+		accidentCountPerBrigadeButton.setPreferredSize(buttonSize);
+		maxAccidentBrigadesButton.setPreferredSize(buttonSize);
+		topBrigadePerTypeButton.setPreferredSize(buttonSize);
+		inactiveBrigadesLeftJoinButton.setPreferredSize(buttonSize);
+		inactiveBrigadesInButton.setPreferredSize(buttonSize);
+		inactiveBrigadesExistsButton.setPreferredSize(buttonSize);
+		brigadeActivityStatusButton.setPreferredSize(buttonSize);
+
+		buttonPanel.add(mastersWithBrigadeInfoButton);
+		buttonPanel.add(findClientsByNameButton);
+		buttonPanel.add(accidentsBetweenDatesButton);
+		buttonPanel.add(accidentCountLastWeekButton);
+		buttonPanel.add(accidentCountPerBrigadeButton);
+		buttonPanel.add(maxAccidentBrigadesButton);
+		buttonPanel.add(topBrigadePerTypeButton);
+		buttonPanel.add(inactiveBrigadesLeftJoinButton);
+		buttonPanel.add(inactiveBrigadesInButton);
+		buttonPanel.add(inactiveBrigadesExistsButton);
+		buttonPanel.add(brigadeActivityStatusButton);
+
+		JPanel fieldsPanel = new JPanel();
+		fieldsPanel.setLayout(new GridBagLayout());
+		GridBagConstraints gbc = new GridBagConstraints();
+		gbc.insets = new Insets(5, 5, 5, 5);
+		gbc.fill = GridBagConstraints.HORIZONTAL;
+		gbc.anchor = GridBagConstraints.WEST;
+
+		addField(fieldsPanel, gbc, "Ім'я клієнта:", reportClientNameField = new JTextField(20));
+		addField(fieldsPanel, gbc, "Початкова дата (dd/MM/yyyy):", reportStartDateField = new JTextField(20));
+		addField(fieldsPanel, gbc, "Кінцева дата (dd/MM/yyyy):", reportEndDateField = new JTextField(20));
+
+		panel.add(buttonPanel, BorderLayout.EAST);
+		panel.add(fieldsPanel, BorderLayout.CENTER);
+
+		// Add action listeners
+		mastersWithBrigadeInfoButton.addActionListener(e -> {
+			String result = main.getMastersWithBrigadeInfo();
+			resultArea.setText("Майстри з інформацією про бригади:\n" + result);
+		});
+
+		findClientsByNameButton.addActionListener(e -> {
+			String namePattern = ((JTextField) fieldsPanel.getComponent(1)).getText();
+			if (namePattern.isEmpty()) {
+				showErrorOptionPane("Введіть ім'я для пошуку");
+				return;
+			}
+			String result = main.findClientsByNamePattern(namePattern);
+			resultArea.setText("Клієнти за іменем '" + namePattern + "':\n" + result);
+		});
+
+		accidentsBetweenDatesButton.addActionListener(e -> {
+			String startDateStr = ((JTextField) fieldsPanel.getComponent(3)).getText();
+			String endDateStr = ((JTextField) fieldsPanel.getComponent(5)).getText();
+			try {
+				Date startDate = main.getDateFormat().parse(startDateStr);
+				Date endDate = main.getDateFormat().parse(endDateStr);
+				String result = main.getAccidentsBetweenDates(startDate, endDate);
+				resultArea.setText("Аварії з " + startDateStr + " по " + endDateStr + ":\n" + result);
+			} catch (ParseException ex) {
+				showErrorOptionPane("Неправильний формат дати. Використовуйте dd/MM/yyyy");
+			}
+		});
+
+		accidentCountLastWeekButton.addActionListener(e -> {
+			int count = main.getAccidentCountLastWeek();
+			resultArea.setText("Кількість аварій за минулий тиждень: " + count);
+		});
+
+		accidentCountPerBrigadeButton.addActionListener(e -> {
+			Map<Integer, Integer> counts = main.getAccidentCountPerBrigade();
+			StringBuilder sb = new StringBuilder("Кількість аварій по бригадах:\n");
+			counts.forEach((brigade, count) ->
+					sb.append("Бригада ").append(brigade).append(": ").append(count).append(" аварій\n"));
+			resultArea.setText(sb.toString());
+		});
+
+		maxAccidentBrigadesButton.addActionListener(e -> {
+			List<Integer> brigades = main.getBrigadesWithMaxAccidents();
+			StringBuilder sb = new StringBuilder("Бригади з максимальною кількістю аварій:\n");
+			brigades.forEach(brigade -> sb.append("Бригада ").append(brigade).append("\n"));
+			resultArea.setText(sb.toString());
+		});
+
+		topBrigadePerTypeButton.addActionListener(e -> {
+			Map<String, Integer> topBrigades = main.getTopBrigadePerAccidentType();
+			StringBuilder sb = new StringBuilder("Найактивніші бригади по типах аварій:\n");
+			topBrigades.forEach((type, brigade) ->
+					sb.append(type).append(": Бригада ").append(brigade).append("\n"));
+			resultArea.setText(sb.toString());
+		});
+
+		inactiveBrigadesLeftJoinButton.addActionListener(e -> {
+			List<Integer> brigades = main.getInactiveBrigadesLeftJoin();
+			showInactiveBrigades("LEFT JOIN", brigades);
+		});
+
+		inactiveBrigadesInButton.addActionListener(e -> {
+			List<Integer> brigades = main.getInactiveBrigadesIn();
+			showInactiveBrigades("NOT IN", brigades);
+		});
+
+		inactiveBrigadesExistsButton.addActionListener(e -> {
+			List<Integer> brigades = main.getInactiveBrigadesExists();
+			showInactiveBrigades("NOT EXISTS", brigades);
+		});
+
+		brigadeActivityStatusButton.addActionListener(e -> {
+			List<String> statuses = main.getBrigadesWithActivityStatus();
+			StringBuilder sb = new StringBuilder("Статус активності бригад:\n");
+			statuses.forEach(status -> sb.append(status).append("\n"));
+			resultArea.setText(sb.toString());
+		});
+
+		return panel;
+	}
+
+	public void updateConnectionStatus() {
+		SwingUtilities.invokeLater(() -> {
+			if (main.dbManager.isConnectionValid()) {
+				connectionStatusLabel.setText("Приєднано до БД");
+				connectionStatusLabel.setForeground(Color.BLACK);
+			} else {
+				connectionStatusLabel.setText("Від'єднано від БД");
+				connectionStatusLabel.setForeground(Color.RED);
+			}
+		});
 	}
 
 	private void addField(JPanel panel, GridBagConstraints gbc, String label, JComponent field) {
@@ -415,6 +607,100 @@ public class UserInterface {
 		}
 	}
 
+	private void initComponentNames() {
+		setButtonNames();
+		setComboBoxNames();
+		setTextFieldNames();
+		setLabelNames();
+		setMiscComponentNames();
+	}
+
+	private void setButtonNames() {
+		countMastersButton.setName("countMastersButton");
+		masterSalaryButton.setName("masterSalaryButton");
+		countBrigadesButton.setName("countBrigadesButton");
+		addMasterButton.setName("addMasterButton");
+		deleteMasterButton.setName("deleteMasterButton");
+		updateMasterButton.setName("updateMasterButton");
+		listMastersButton.setName("listMastersButton");
+
+		countAccidentsButton.setName("countAccidentsButton");
+		averageCostButton.setName("averageCostButton");
+		accidentTypesButton.setName("accidentTypesButton");
+		addAccidentButton.setName("addAccidentButton");
+		deleteAccidentButton.setName("deleteAccidentButton");
+		deleteAccidentAndClientButton.setName("deleteAccidentAndClientButton");
+		updateAccidentButton.setName("updateAccidentButton");
+		listAccidentsButton.setName("listAccidentsButton");
+
+		countClientsButton.setName("countClientsButton");
+		addClientButton.setName("addClientButton");
+		deleteClientButton.setName("deleteClientButton");
+		deleteClientAndAccidentButton.setName("deleteClientAndAccidentButton");
+		updateClientButton.setName("updateClientButton");
+		listClientsButton.setName("listClientsButton");
+
+		mastersWithBrigadeInfoButton.setName("mastersWithBrigadeInfoButton");
+		findClientsByNameButton.setName("findClientsByNameButton");
+		accidentsBetweenDatesButton.setName("accidentsBetweenDatesButton");
+		accidentCountLastWeekButton.setName("accidentCountLastWeekButton");
+		accidentCountPerBrigadeButton.setName("accidentCountPerBrigadeButton");
+		maxAccidentBrigadesButton.setName("maxAccidentBrigadesButton");
+		topBrigadePerTypeButton.setName("topBrigadePerTypeButton");
+		inactiveBrigadesLeftJoinButton.setName("inactiveBrigadesLeftJoinButton");
+		inactiveBrigadesInButton.setName("inactiveBrigadesInButton");
+		inactiveBrigadesExistsButton.setName("inactiveBrigadesExistsButton");
+		brigadeActivityStatusButton.setName("brigadeActivityStatusButton");
+
+		exitButton.setName("exitButton");
+	}
+
+	private void setComboBoxNames() {
+		addMasterStatusField.setName("addMasterStatusField");
+		addMasterBrigadeField.setName("addMasterBrigadeField");
+		addMasterDepartmentField.setName("addMasterDepartmentField");
+		masterIndexField.setName("masterIndexField");
+
+		addAccidentTypeField.setName("addAccidentTypeField");
+		addAccidentStatusField.setName("addAccidentStatusField");
+		addAccidentBrigadeField.setName("addAccidentBrigadeField");
+		accidentIdField.setName("accidentIdField");
+
+		addClientDepartmentField.setName("addClientDepartmentField");
+		clientAccidentIdField.setName("clientAccidentIdField");
+	}
+
+	private void setTextFieldNames() {
+		addMasterNameField.setName("addMasterNameField");
+		addMasterAddressField.setName("addMasterAddressField");
+		addMasterPhoneField.setName("addMasterPhoneField");
+		addMasterExperienceField.setName("addMasterExperienceField");
+		masterStartDateField.setName("masterStartDateField");
+		masterEndDateField.setName("masterEndDateField");
+
+		addAccidentDateField.setName("addAccidentDateField");
+		addAccidentAddressField.setName("addAccidentAddressField");
+		addAccidentCostField.setName("addAccidentCostField");
+		accidentStartDateField.setName("accidentStartDateField");
+		accidentEndDateField.setName("accidentEndDateField");
+
+		addClientNameField.setName("addClientNameField");
+		addClientAddressField.setName("addClientAddressField");
+		addClientPhoneField.setName("addClientPhoneField");
+
+		reportClientNameField.setName("reportClientNameField");
+		reportStartDateField.setName("reportStartDateField");
+		reportEndDateField.setName("reportEndDateField");
+	}
+
+	private void setLabelNames() {
+		connectionStatusLabel.setName("connectionStatusLabel");
+	}
+
+	private void setMiscComponentNames() {
+		resultArea.setName("resultArea");
+	}
+
 	private Date parseDate(String dateStr) {
 		try {
 			return main.getDateFormat().parse(dateStr);
@@ -445,6 +731,16 @@ public class UserInterface {
 
 	private void countBrigades() {
 		resultArea.setText("Кількість бригад: " + main.getBrigadeCount());
+	}
+
+	private void showInactiveBrigades(String method, List<Integer> brigades) {
+		if (brigades == null || brigades.isEmpty()) {
+			resultArea.setText("Неактивних бригад не знайдено (" + method + ")");
+		} else {
+			StringBuilder sb = new StringBuilder("Неактивні бригади (" + method + "):\n");
+			brigades.forEach(brigade -> sb.append("Бригада ").append(brigade).append("\n"));
+			resultArea.setText(sb.toString());
+		}
 	}
 
 	private void addMaster() {
@@ -607,9 +903,10 @@ public class UserInterface {
 		if (startDate != null && endDate != null) {
 			int count;
 			try {
-				count = main.getAccidentsBetweenDates(startDate, endDate);
+				count = main.getAccidentCountBetweenDates(startDate, endDate);
 				resultArea.setText("Кількість аварій з " + main.getDateFormat().format(startDate) + " по " + main.getDateFormat().format(endDate) + ": " + count);
 			} catch (IllegalArgumentException ex) {
+				ex.printStackTrace();
 				showErrorOptionPane("Неправильний формат дати. Використовуйте dd/MM/yyyy.");
 				resultArea.setText("Неправильний формат дати. Використовуйте dd/MM/yyyy.");
 			}
@@ -645,7 +942,6 @@ public class UserInterface {
 			validateField(addAccidentCostField, "Вартість");
 			validateField(addAccidentStatusField, "Стан");
 			validateField(addAccidentBrigadeField, "Номер бригади");
-
 
 			Date date = parseDate(addAccidentDateField.getText());
 			String address = addAccidentAddressField.getText();
@@ -1111,7 +1407,7 @@ public class UserInterface {
 		JOptionPane.showMessageDialog(frame, message, "Помилка", JOptionPane.ERROR_MESSAGE);
 	}
 
-	private void populateMasterComboBoxes() {
+	public void populateMasterComboBoxes() {
 		String[] masterIndices = main.getMasters().stream()
 				.map(master -> String.valueOf(master.getIndex()))
 				.toArray(String[]::new);
@@ -1125,7 +1421,7 @@ public class UserInterface {
 		addMasterDepartmentField.setModel(new DefaultComboBoxModel<>(departmentNumbers));
 	}
 
-	private void populateAccidentComboBoxes() {
+	public void populateAccidentComboBoxes() {
 		Set<String> uniqueIds = new HashSet<>();
 		List<String> accidentIds = new ArrayList<>();
 
@@ -1151,7 +1447,7 @@ public class UserInterface {
 		addAccidentBrigadeField.setModel(new DefaultComboBoxModel<>(brigadeNumbers));
 	}
 
-	private void populateClientComboBoxes() {
+	public void populateClientComboBoxes() {
 		Set<String> uniqueIds = new HashSet<>();
 
 		for (Accident accident : main.getAccidents()) {

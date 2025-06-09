@@ -4,46 +4,49 @@ import com.vitaliyrev.courseworkdb.app.Accident;
 import com.vitaliyrev.courseworkdb.app.Brigade;
 import com.vitaliyrev.courseworkdb.app.Client;
 import com.vitaliyrev.courseworkdb.app.Master;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 
 import java.sql.*;
 import java.util.*;
 
 // Клас "Менеджер БД"
 public class DatabaseManager {
-	private Connection connection;
-
-	public DatabaseManager(Connection connection) {
-		this.connection = connection;
-	}
+	private final HikariDataSource dataSource;
 
 	public DatabaseManager(String url, String user, String password) throws SQLException {
-		this.connection = DriverManager.getConnection(url, user, password);
+		HikariConfig config = new HikariConfig();
+		config.setJdbcUrl(url);
+		config.setUsername(user);
+		config.setPassword(password);
+		config.setMaximumPoolSize(250);
+		config.setConnectionTimeout(1000);
+		config.setIdleTimeout(600000);
+		this.dataSource = new HikariDataSource(config);
+
 		initializeDatabase();
 	}
 
-	public Connection getConnection() {
-		return connection;
+	public Connection getConnection() throws SQLException {
+		return this.dataSource.getConnection();
 	}
 
-	public void setConnection(Connection connection) { // TODO: MAKE ACCESSIBLE ONLY IN TESTS
-		this.connection = connection;
-	}
-
-	public void beginTransaction() throws SQLException {
-		connection.setAutoCommit(false);
-	}
-
-	public void commitTransaction() throws SQLException {
-		connection.commit();
+	public boolean isConnectionValid() {
+		try (Connection conn = this.getConnection()) {
+			return conn.isValid(3);
+		} catch (SQLException e) {
+			e.printStackTrace();
+			return false;
+		}
 	}
 
 	// Ініціалізація БД; створення таблиць у базі, якщо їх не існує
 	public void initializeDatabase() throws SQLException {
-		try (Statement stmt = connection.createStatement()) {
-			// 1. Create brigades table first
+		try (Statement stmt = this.getConnection().createStatement()) {
+			// 1. Створити таблицю brigades
 			stmt.execute("CREATE TABLE IF NOT EXISTS brigades (number INTEGER PRIMARY KEY)");
 
-			// 2. Create accidents table with ON DELETE CASCADE
+			// 2. Створити таблицю accidents (без посилання на клієнтів)
 			stmt.execute("CREATE TABLE IF NOT EXISTS accidents (" +
 					"id SERIAL PRIMARY KEY, " +
 					"accident_id VARCHAR(255) UNIQUE, " +
@@ -54,22 +57,16 @@ public class DatabaseManager {
 					"brigade_number INTEGER REFERENCES brigades(number) ON DELETE CASCADE, " +
 					"status VARCHAR(255))");
 
-			// 3. Create clients table with ON DELETE CASCADE
+			// 3. Створити таблицю clients (з посиланням на аварію через accident_id)
 			stmt.execute("CREATE TABLE IF NOT EXISTS clients (" +
 					"id SERIAL PRIMARY KEY, " +
-					"accident_id VARCHAR(255) REFERENCES accidents(accident_id) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED, " +
+					"accident_id VARCHAR(255) UNIQUE REFERENCES accidents(accident_id) ON DELETE CASCADE, " +
 					"name VARCHAR(255), " +
 					"address VARCHAR(255), " +
 					"phone_number VARCHAR(255), " +
 					"department_number INTEGER)");
 
-			// 4. Add client reference to accidents table with ON DELETE CASCADE
-			stmt.execute("ALTER TABLE accidents ADD COLUMN IF NOT EXISTS client_id INTEGER");
-			stmt.execute("ALTER TABLE accidents DROP CONSTRAINT IF EXISTS accidents_client_id_fkey");
-			stmt.execute("ALTER TABLE accidents ADD CONSTRAINT accidents_client_id_fkey " +
-					"FOREIGN KEY (client_id) REFERENCES clients(id) ON DELETE CASCADE DEFERRABLE INITIALLY DEFERRED");
-
-			// 5. Create masters table
+			// 4. Створити таблицю masters
 			stmt.execute("CREATE TABLE IF NOT EXISTS masters (" +
 					"id SERIAL PRIMARY KEY, " +
 					"name VARCHAR(255), " +
@@ -85,7 +82,7 @@ public class DatabaseManager {
 	// Завантаження номерів бригад з БД
 	public List<Brigade> loadBrigades() throws SQLException {
 		List<Brigade> brigades = new ArrayList<>();
-		try (Statement stmt = connection.createStatement();
+		try (Statement stmt = this.getConnection().createStatement();
 		     ResultSet rs = stmt.executeQuery("SELECT number FROM brigades")) {
 			while (rs.next()) {
 				brigades.add(new Brigade(rs.getInt("number")));
@@ -97,7 +94,7 @@ public class DatabaseManager {
 	// Завантаження мастерів з БД
 	public List<Master> loadMasters(Map<Integer, Brigade> brigadeMap) throws SQLException {
 		List<Master> masters = new ArrayList<>();
-		try (Statement stmt = connection.createStatement();
+		try (Statement stmt = this.getConnection().createStatement();
 		     ResultSet rs = stmt.executeQuery("SELECT * FROM masters")) {
 			while (rs.next()) {
 				int brigadeNumber = rs.getInt("brigade_number");
@@ -120,9 +117,9 @@ public class DatabaseManager {
 	}
 
 	// Завантаження аварій з БД
-	public List<Accident> loadAccidents(Map<Integer, Brigade> brigadeMap, Map<Integer, Client> clientMap) throws SQLException {
+	public List<Accident> loadAccidents(Map<Integer, Brigade> brigadeMap, Map<String, Client> clientMap) throws SQLException {
 		List<Accident> accidents = new ArrayList<>();
-		try (Statement stmt = connection.createStatement();
+		try (Statement stmt = this.getConnection().createStatement();
 		     ResultSet rs = stmt.executeQuery("SELECT * FROM accidents")) {
 			while (rs.next()) {
 				int brigadeNumber = rs.getInt("brigade_number");
@@ -139,12 +136,12 @@ public class DatabaseManager {
 						rs.getString("status")
 				);
 
-				// Link client if exists
-				int clientId = rs.getInt("client_id");
-				if (!rs.wasNull() && clientMap.containsKey(clientId)) {
-					Client client = clientMap.get(clientId);
+				// Link client using accident_id
+				String accidentId = accident.getAccidentId();
+				if (accidentId != null && clientMap.containsKey(accidentId)) {
+					Client client = clientMap.get(accidentId);
 					accident.setClient(client);
-					client.setAccident(accident); // Set bidirectional relationship
+					client.setAccident(accident);
 				}
 
 				accidents.add(accident);
@@ -156,7 +153,7 @@ public class DatabaseManager {
 	// Завантаження клієнтів з БД
 	public List<Client> loadClients() throws SQLException {
 		List<Client> clients = new ArrayList<>();
-		try (Statement stmt = connection.createStatement();
+		try (Statement stmt = this.getConnection().createStatement();
 		     ResultSet rs = stmt.executeQuery("SELECT * FROM clients")) {
 			while (rs.next()) {
 				clients.add(new Client(
@@ -175,7 +172,7 @@ public class DatabaseManager {
 	// Збереження даних бригад до БД
 	public void saveBrigades(Set<Integer> brigadeNumbers) throws SQLException {
 		String sql = "INSERT INTO brigades (number) VALUES (?) ON CONFLICT (number) DO NOTHING";
-		try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+		try (PreparedStatement pstmt = this.getConnection().prepareStatement(sql)) {
 			for (Integer number : brigadeNumbers) {
 				pstmt.setInt(1, number);
 				pstmt.addBatch();
@@ -191,7 +188,7 @@ public class DatabaseManager {
 				"name=EXCLUDED.name, address=EXCLUDED.address, phone_number=EXCLUDED.phone_number, " +
 				"experience=EXCLUDED.experience, status=EXCLUDED.status, brigade_number=EXCLUDED.brigade_number, " +
 				"department_number=EXCLUDED.department_number";
-		try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+		try (PreparedStatement pstmt = this.getConnection().prepareStatement(sql)) {
 			for (Master master : masters) {
 				pstmt.setInt(1, master.getIndex());
 				pstmt.setString(2, master.getName());
@@ -209,15 +206,14 @@ public class DatabaseManager {
 
 	// Збереження даних аварій до БД
 	public void saveAccidents(List<Accident> accidents) throws SQLException {
-		String sql = "INSERT INTO accidents (id, accident_id, address, type, cost, date, brigade_number, status, client_id) " +
-				"VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) " +
+		String sql = "INSERT INTO accidents (id, accident_id, address, type, cost, date, brigade_number, status) " +
+				"VALUES (?, ?, ?, ?, ?, ?, ?, ?) " +
 				"ON CONFLICT (id) DO UPDATE SET " +
 				"accident_id = EXCLUDED.accident_id, address = EXCLUDED.address, " +
 				"type = EXCLUDED.type, cost = EXCLUDED.cost, date = EXCLUDED.date, " +
-				"brigade_number = EXCLUDED.brigade_number, status = EXCLUDED.status, " +
-				"client_id = EXCLUDED.client_id";
+				"brigade_number = EXCLUDED.brigade_number, status = EXCLUDED.status";
 
-		try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+		try (PreparedStatement pstmt = this.getConnection().prepareStatement(sql)) {
 			for (Accident accident : accidents) {
 				pstmt.setInt(1, accident.getIndex());
 				pstmt.setString(2, accident.getAccidentId());
@@ -227,14 +223,6 @@ public class DatabaseManager {
 				pstmt.setDate(6, new java.sql.Date(accident.getDate().getTime()));
 				pstmt.setInt(7, accident.getBrigade().getNumber());
 				pstmt.setString(8, accident.getStatus());
-
-				// Handle client reference
-				if (accident.getClient() != null) {
-					pstmt.setInt(9, accident.getClient().getIndex());
-				} else {
-					pstmt.setNull(9, Types.INTEGER);
-				}
-
 				pstmt.addBatch();
 			}
 			pstmt.executeBatch();
@@ -247,7 +235,7 @@ public class DatabaseManager {
 				"VALUES (?, ?, ?, ?, ?, ?) ON CONFLICT (id) DO UPDATE SET " +
 				"accident_id=EXCLUDED.accident_id, name=EXCLUDED.name, address=EXCLUDED.address, " +
 				"phone_number=EXCLUDED.phone_number, department_number=EXCLUDED.department_number";
-		try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+		try (PreparedStatement pstmt = this.getConnection().prepareStatement(sql)) {
 			for (Client client : clients) {
 				pstmt.setInt(1, client.getIndex());
 				pstmt.setString(2, client.getAccidentId());
@@ -263,7 +251,7 @@ public class DatabaseManager {
 
 	public void deleteMaster(int masterId) throws SQLException {
 		String sql = "DELETE FROM masters WHERE id = ?";
-		try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+		try (PreparedStatement pstmt = this.getConnection().prepareStatement(sql)) {
 			pstmt.setInt(1, masterId);
 			pstmt.executeUpdate();
 		}
@@ -271,7 +259,7 @@ public class DatabaseManager {
 
 	public void deleteAccident(int accidentIndex) throws SQLException {
 		String sql = "DELETE FROM accidents WHERE id = ?";
-		try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+		try (PreparedStatement pstmt = this.getConnection().prepareStatement(sql)) {
 			pstmt.setInt(1, accidentIndex);
 			pstmt.executeUpdate();
 		}
@@ -279,7 +267,7 @@ public class DatabaseManager {
 
 	public void deleteClient(int clientId) throws SQLException {
 		String sql = "DELETE FROM clients WHERE id = ?";
-		try (PreparedStatement pstmt = connection.prepareStatement(sql)) {
+		try (PreparedStatement pstmt = this.getConnection().prepareStatement(sql)) {
 			pstmt.setInt(1, clientId);
 			pstmt.executeUpdate();
 		}
@@ -287,8 +275,8 @@ public class DatabaseManager {
 
 	// Закриття зв'язку з БД
 	public void close() throws SQLException {
-		if (connection != null && !connection.isClosed()) {
-			connection.close();
+		if (dataSource != null && !dataSource.isClosed()) {
+			dataSource.close();
 		}
 	}
 }
