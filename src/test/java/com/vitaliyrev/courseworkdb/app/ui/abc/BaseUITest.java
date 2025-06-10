@@ -47,18 +47,22 @@ public abstract class BaseUITest {
 	}
 
 	protected void prepareTestData() {
-		List<Brigade> brigades = List.of(
+		List<Brigade> brigades = new ArrayList<>(List.of(
 				new Brigade(1)
-		);
-		List<Master> masters = List.of(
+		));
+		List<Master> masters = new ArrayList<>(List.of(
 				new Master(1, "Валерій Іваненко", "вул. Молодіжна 12", "0987654321", 5, "Зайнятий", new Brigade(1), 1)
-		);
-		List<Client> clients = List.of(
+		));
+		List<Client> clients = new ArrayList<>(List.of(
 				new Client(1, "1-AbCdEfG", "Василь Стасенко", "вул. Приморська 43", "0987654321", 1)
-		);
-		List<Accident> accidents = List.of(
-				new Accident(1, "1-AbCdEfG", "вул. Приморська 43", "Крах крана", 150.0, new Date(), new Brigade(1), "У процесі")
-		);
+		));
+		List<Accident> accidents = new ArrayList<>(List.of(
+				new Accident(1, "1-AbCdEfG", "вул. Приморська 43", "Крах крана", 150.0, new Date(125, Calendar.JUNE, 10), new Brigade(1), "У процесі")
+		));
+
+		mainMock.setMasters(masters);
+		mainMock.setClients(clients);
+		mainMock.setAccidents(accidents);
 
 		try {
 			Mockito.when(mockDbManager.loadBrigades()).thenReturn(brigades);
@@ -68,13 +72,14 @@ public abstract class BaseUITest {
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}
-		mainMock.setMasters(masters);
-		mainMock.setClients(clients);
-		mainMock.setAccidents(accidents);
 
 		mainMock.loadAllData();
 		ui.populateMasterComboBoxes();
 		ui.populateClientComboBoxes();
 		ui.populateAccidentComboBoxes();
+	}
+
+	protected int getComboboxItemsCount(String comboName) {
+		return window.comboBox(comboName).contents().length;
 	}
 }

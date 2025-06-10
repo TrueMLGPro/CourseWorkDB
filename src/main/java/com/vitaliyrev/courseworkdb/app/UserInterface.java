@@ -70,7 +70,7 @@ public class UserInterface {
 	private JButton accidentsBetweenDatesButton; // Кнопка для відображення аварій в інтервалі дат
 	private JButton accidentCountLastWeekButton; // Кнопка для відображення кількості аварій за минулий тиждень
 	private JButton accidentCountPerBrigadeButton; // Кнопка для відображення кількості аварій на бригаду
-	private JButton maxAccidentBrigadesButton; // Кнопка для відображення бригад з максимальnoю кількістю аварій
+	private JButton maxAccidentBrigadesButton; // Кнопка для відображення бригад з максимальною кількістю аварій
 	private JButton topBrigadePerTypeButton; // Кнопка для відображення найактивніших бригад за типами аварій
 	private JButton inactiveBrigadesLeftJoinButton; // Кнопка для відображення неактивних бригад (LEFT JOIN)
 	private JButton inactiveBrigadesInButton; // Кнопка для відображення неактивних бригад (NOT IN)
@@ -705,7 +705,10 @@ public class UserInterface {
 		try {
 			return main.getDateFormat().parse(dateStr);
 		} catch (ParseException ex) {
-			ex.printStackTrace();
+			if (dateStr.isEmpty()) {
+				showErrorOptionPane("Поле дати не може бути пустим.");
+				return null;
+			}
 			showErrorOptionPane("Неправильний формат дати. Використовуйте dd/MM/yyyy.");
 			return null;
 		}
@@ -846,13 +849,11 @@ public class UserInterface {
 	private void listMasters() {
 		StringBuilder sb = new StringBuilder("Список майстрів:\n");
 
-		// Create a map to track unique masters by ID
 		Map<Integer, Master> uniqueMasters = new LinkedHashMap<>();
 		for (Master master : main.getMasters()) {
 			uniqueMasters.put(master.getIndex(), master);
 		}
 
-		// Calculate column widths using unique masters
 		int indexWidth = "Індекс".length();
 		int nameWidth = "Ім'я та прізвище".length();
 		int addressWidth = "Адреса".length();
@@ -881,7 +882,6 @@ public class UserInterface {
 				"-".repeat(phoneWidth), "-".repeat(experienceWidth), "-".repeat(statusWidth), "-".repeat(brigadeWidth),
 				"-".repeat(departmentWidth)));
 
-		// Display only unique masters
 		for (Master master : uniqueMasters.values()) {
 			sb.append(String.format(format,
 					master.getIndex(),
@@ -906,9 +906,8 @@ public class UserInterface {
 				count = main.getAccidentCountBetweenDates(startDate, endDate);
 				resultArea.setText("Кількість аварій з " + main.getDateFormat().format(startDate) + " по " + main.getDateFormat().format(endDate) + ": " + count);
 			} catch (IllegalArgumentException ex) {
-				ex.printStackTrace();
-				showErrorOptionPane("Неправильний формат дати. Використовуйте dd/MM/yyyy.");
-				resultArea.setText("Неправильний формат дати. Використовуйте dd/MM/yyyy.");
+				showErrorOptionPane(ex.getMessage());
+				resultArea.setText(ex.getMessage());
 			}
 		} else {
 			resultArea.setText("Неправильний формат дати. Використовуйте dd/MM/yyyy.");
@@ -1003,11 +1002,8 @@ public class UserInterface {
 			Client clientToRemove = main.getClientByAccidentId(accidentId);
 
 			if (accidentToRemove != null && clientToRemove != null) {
-				// Delete accident first to trigger cascade
 				main.dbManager.deleteAccident(accidentToRemove.getIndex());
 				main.getAccidents().remove(accidentToRemove);
-
-				// Client will be automatically deleted by cascade
 				main.getClients().remove(clientToRemove);
 
 				main.saveAllData();
@@ -1019,7 +1015,7 @@ public class UserInterface {
 				showErrorOptionPane("Не вдалося знайти пов'язані записи");
 			}
 		} catch (SQLException | IllegalArgumentException ex) {
-			showErrorOptionPane("Помилка видалення: " + ex.getMessage());
+			showErrorOptionPane("Помилка видалення аварії та клієнта: " + ex.getMessage());
 		}
 	}
 
@@ -1032,7 +1028,6 @@ public class UserInterface {
 			validateField(addAccidentStatusField, "Стан");
 			validateField(addAccidentBrigadeField, "Номер бригади");
 			validateField(accidentIdField, "ID аварії");
-
 
 			String accidentId = (String) accidentIdField.getSelectedItem();
 			Accident accidentToUpdate = main.getAccidentById(accidentId);
@@ -1075,13 +1070,11 @@ public class UserInterface {
 	private void listAccidents() {
 		StringBuilder sb = new StringBuilder("Список аварій:\n");
 
-		// Create a map to track unique accidents by ID
 		Map<String, Accident> uniqueAccidents = new LinkedHashMap<>();
 		for (Accident accident : main.getAccidents()) {
 			uniqueAccidents.put(accident.getAccidentId(), accident);
 		}
 
-		// Calculate column widths using unique accidents
 		int idWidth = "ID аварії".length();
 		int dateWidth = "Дата".length();
 		int addressWidth = "Адреса".length();
@@ -1107,7 +1100,6 @@ public class UserInterface {
 		sb.append(String.format(format, "-".repeat(idWidth), "-".repeat(dateWidth), "-".repeat(addressWidth),
 				"-".repeat(typeWidth), "-".repeat(costWidth), "-".repeat(statusWidth), "-".repeat(brigadeWidth)));
 
-		// Display only unique accidents
 		for (Accident accident : uniqueAccidents.values()) {
 			sb.append(String.format(format,
 					accident.getAccidentId(),
@@ -1175,13 +1167,11 @@ public class UserInterface {
 			String accidentId = (String) clientAccidentIdField.getSelectedItem();
 			Client clientToRemove = main.getClientByAccidentId(accidentId);
 			if (clientToRemove != null) {
-				// Break the association before deletion
 				Accident associatedAccident = main.getAccidentById(accidentId);
 				if (associatedAccident != null) {
 					associatedAccident.setClient(null);
 				}
 
-				// Now delete the client
 				main.dbManager.deleteClient(clientToRemove.getIndex());
 				main.getClients().remove(clientToRemove);
 
@@ -1206,11 +1196,8 @@ public class UserInterface {
 			Accident accidentToRemove = main.getAccidentById(accidentId);
 
 			if (clientToRemove != null && accidentToRemove != null) {
-				// Delete client first to trigger cascade
 				main.dbManager.deleteClient(clientToRemove.getIndex());
 				main.getClients().remove(clientToRemove);
-
-				// Accident will be automatically deleted by cascade
 				main.getAccidents().remove(accidentToRemove);
 
 				main.saveAllData();
@@ -1244,7 +1231,6 @@ public class UserInterface {
 			}
 
 			if (clientToUpdate == null) {
-				// Create new client if it doesn't exist
 				int nextClientIndex = main.getNextClientIndex();
 				clientToUpdate = new Client(
 						nextClientIndex,
@@ -1257,14 +1243,11 @@ public class UserInterface {
 				main.getClients().add(clientToUpdate);
 				accident.setClient(clientToUpdate);
 			} else {
-				// Update existing client
 				clientToUpdate.setName(addClientNameField.getText());
 				clientToUpdate.setAddress(addClientAddressField.getText());
 				clientToUpdate.setPhoneNumber(addClientPhoneField.getText());
 				clientToUpdate.setDepartmentNumber(Integer.parseInt((String) addClientDepartmentField.getSelectedItem()));
 			}
-
-			// Update accident address
 			accident.setAddress(addClientAddressField.getText());
 
 			main.saveAllData();
@@ -1280,13 +1263,11 @@ public class UserInterface {
 	private void listClients() {
 		StringBuilder sb = new StringBuilder("Список клієнтів:\n");
 
-		// Create a map to track unique clients by accident ID
 		Map<String, Client> uniqueClients = new LinkedHashMap<>();
 		for (Client client : main.getClients()) {
 			uniqueClients.put(client.getAccidentId(), client);
 		}
 
-		// Calculate column widths using unique clients
 		int accidentIdWidth = "ID аварії".length();
 		int nameWidth = "Ім'я та прізвище".length();
 		int addressWidth = "Адреса".length();
@@ -1308,7 +1289,6 @@ public class UserInterface {
 		sb.append(String.format(format, "-".repeat(accidentIdWidth), "-".repeat(nameWidth),
 				"-".repeat(addressWidth), "-".repeat(phoneWidth), "-".repeat(departmentWidth)));
 
-		// Display only unique clients
 		for (Client client : uniqueClients.values()) {
 			sb.append(String.format(format,
 					client.getAccidentId(),
@@ -1471,7 +1451,7 @@ public class UserInterface {
 		addClientDepartmentField.setModel(new DefaultComboBoxModel<>(departmentNumbers));
 	}
 
-	private void loadMasterData(int masterIndex) {
+	public void loadMasterData(int masterIndex) {
 		Master master = main.getMasterByIndex(masterIndex);
 		if (master != null) {
 			addMasterNameField.setText(master.getName());
@@ -1486,7 +1466,7 @@ public class UserInterface {
 		}
 	}
 
-	private void loadClientData(String accidentId) {
+	public void loadClientData(String accidentId) {
 		Client client = main.getClientByAccidentId(accidentId);
 
 		// Always get the address from the accident first
@@ -1508,7 +1488,7 @@ public class UserInterface {
 		}
 	}
 
-	private void loadAccidentData(String accidentId) {
+	public void loadAccidentData(String accidentId) {
 		Accident accident = main.getAccidentById(accidentId);
 		if (accident != null) {
 			addAccidentDateField.setText(main.getDateFormat().format(accident.getDate()));
