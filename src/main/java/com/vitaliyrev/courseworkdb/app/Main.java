@@ -428,8 +428,8 @@ public class Main {
 
 			// Save in proper order with foreign key dependencies
 			dbManager.saveBrigades(brigadeNumbers);
-			if (clients != null) dbManager.saveClients(clients);
 			if (accidents != null) dbManager.saveAccidents(accidents);
+			if (clients != null) dbManager.saveClients(clients);
 			if (masters != null) dbManager.saveMasters(masters);
 		} catch (SQLException e) {
 			e.printStackTrace();

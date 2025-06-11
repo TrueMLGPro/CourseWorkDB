@@ -9,11 +9,7 @@
   <component name="ChangeListManager">
     <list default="true" id="95a69f16-a790-40cd-8ee2-a8de1e3cf5c5" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/vitaliyrev/courseworkdb/app/UserInterface.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/vitaliyrev/courseworkdb/app/UserInterface.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/ui/AccidentsTabUITest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/ui/AccidentsTabUITest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/ui/ClientsTabUITest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/ui/ClientsTabUITest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/ui/MastersTabUITest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/ui/MastersTabUITest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/ui/abc/BaseUITest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/ui/abc/BaseUITest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/vitaliyrev/courseworkdb/app/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/vitaliyrev/courseworkdb/app/Main.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -165,7 +161,7 @@
       <recent name="D:\IDEA_Projects\Polytech\Databases\CourseWorkDB\src\main\test\src\main\java\com\vitaliyrev\courseworkdb" />
     </key>
   </component>
-  <component name="RunManager" selected="Gradle.Tests in 'com.vitaliyrev.courseworkdb.app.ui'">
+  <component name="RunManager" selected="Gradle.CourseWorkDB [run]">
     <configuration name="ClientsTabUITest.testDeleteClient" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
       <ExternalSystemSettings>
         <option name="executionName" />
@@ -306,10 +302,10 @@
     </list>
     <recent_temporary>
       <list>
+        <item itemvalue="Gradle.CourseWorkDB [run]" />
         <item itemvalue="Gradle.Tests in 'com.vitaliyrev.courseworkdb.app.ui'" />
         <item itemvalue="Gradle.ClientsTabUITest.testDeleteClient" />
         <item itemvalue="Gradle.MastersTabUITest.testDeleteMaster" />
-        <item itemvalue="Gradle.CourseWorkDB [run]" />
         <item itemvalue="Gradle.MastersTabUITest" />
       </list>
     </recent_temporary>
