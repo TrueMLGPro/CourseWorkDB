@@ -31,39 +31,55 @@ public class DatabaseManagerTestBase {
 
 	protected void initializeSchema(Connection conn) throws SQLException {
 		try (Statement stmt = conn.createStatement()) {
-			// 1. Створити таблицю brigades
-			stmt.execute("CREATE TABLE IF NOT EXISTS brigades (number INTEGER PRIMARY KEY)");
+			// 1. Створити таблицю existing_brigades
+			stmt.execute("CREATE TABLE IF NOT EXISTS existing_brigades (number INTEGER PRIMARY KEY)");
 
-			// 2. Створити таблицю accidents (без посилання на клієнтів)
-			stmt.execute("CREATE TABLE IF NOT EXISTS accidents (" +
+			// 2. Створити таблицю master_statuses
+			stmt.execute("CREATE TABLE IF NOT EXISTS master_statuses (" +
 					"id SERIAL PRIMARY KEY, " +
-					"accident_id VARCHAR(255) UNIQUE, " +
-					"address VARCHAR(255), " +
-					"type VARCHAR(255), " +
-					"cost DOUBLE PRECISION, " +
-					"date DATE, " +
-					"brigade_number INTEGER REFERENCES brigades(number) ON DELETE CASCADE, " +
-					"status VARCHAR(255))");
+					"status VARCHAR(255) UNIQUE)");
 
-			// 3. Створити таблицю clients (з посиланням на аварію через accident_id)
+			// 3. Створити таблицю accident_types
+			stmt.execute("CREATE TABLE IF NOT EXISTS accident_types (" +
+					"id SERIAL PRIMARY KEY, " +
+					"type VARCHAR(255) UNIQUE)");
+
+			// 4. Створити таблицю accident_statuses
+			stmt.execute("CREATE TABLE IF NOT EXISTS accident_statuses (" +
+					"id SERIAL PRIMARY KEY, " +
+					"status VARCHAR(255) UNIQUE)");
+
+			// 5. Створити таблицю clients
 			stmt.execute("CREATE TABLE IF NOT EXISTS clients (" +
 					"id SERIAL PRIMARY KEY, " +
-					"accident_id VARCHAR(255) UNIQUE REFERENCES accidents(accident_id) ON DELETE CASCADE, " +
 					"name VARCHAR(255), " +
 					"address VARCHAR(255), " +
-					"phone_number VARCHAR(255), " +
+					"phone_number VARCHAR(255) UNIQUE, " +
 					"department_number INTEGER)");
 
-			// 4. Створити таблицю masters
+			// 6. Створити таблицю masters
 			stmt.execute("CREATE TABLE IF NOT EXISTS masters (" +
 					"id SERIAL PRIMARY KEY, " +
 					"name VARCHAR(255), " +
 					"address VARCHAR(255), " +
 					"phone_number VARCHAR(255), " +
 					"experience INTEGER, " +
-					"status VARCHAR(255), " +
-					"brigade_number INTEGER REFERENCES brigades(number) ON DELETE CASCADE, " +
+					"status_id INTEGER REFERENCES master_statuses(id), " +
+					"brigade_number INTEGER REFERENCES existing_brigades(number), " +
 					"department_number INTEGER)");
+
+			// 7. Створити таблицю accidents
+			stmt.execute("CREATE TABLE IF NOT EXISTS accidents (" +
+					"id SERIAL PRIMARY KEY, " +
+					"address VARCHAR(255), " +
+					"type_id INTEGER REFERENCES accident_types(id), " +
+					"cost DOUBLE PRECISION, " +
+					"date DATE, " +
+					"brigade_number INTEGER REFERENCES existing_brigades(number), " +
+					"status_id INTEGER REFERENCES accident_statuses(id), " +
+					"client_phone_number VARCHAR(255) REFERENCES clients(phone_number), " +
+					"accident_index INTEGER, " +
+					"UNIQUE (client_phone_number, accident_index))");
 		}
 	}
 

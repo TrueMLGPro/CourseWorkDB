@@ -51,13 +51,13 @@ public abstract class BaseUITest {
 				new Brigade(1)
 		));
 		List<Master> masters = new ArrayList<>(List.of(
-				new Master(1, "Валерій Іваненко", "вул. Молодіжна 12", "0987654321", 5, "Зайнятий", new Brigade(1), 1)
+				new Master(1, "Валерій Іваненко", "вул. Молодіжна 12", "0987654320", 5, "Зайнятий", new Brigade(1), 1)
 		));
 		List<Client> clients = new ArrayList<>(List.of(
-				new Client(1, "1-AbCdEfG", "Василь Стасенко", "вул. Приморська 43", "0987654321", 1)
+				new Client(1, "Василь Стасенко", "вул. Приморська 43", "0987654321", 1)
 		));
 		List<Accident> accidents = new ArrayList<>(List.of(
-				new Accident(1, "1-AbCdEfG", "вул. Приморська 43", "Крах крана", 150.0, new Date(125, Calendar.JUNE, 10), new Brigade(1), "У процесі")
+				new Accident(1, "вул. Приморська 43", "Крах крана", 150.0, new Date(125, Calendar.JUNE, 10), new Brigade(1), "У процесі", "0987654321", 1)
 		));
 
 		mainMock.setMasters(masters);
@@ -65,10 +65,10 @@ public abstract class BaseUITest {
 		mainMock.setAccidents(accidents);
 
 		try {
-			Mockito.when(mockDbManager.loadBrigades()).thenReturn(brigades);
+			Mockito.when(mockDbManager.loadExistingBrigades()).thenReturn(brigades);
 			Mockito.when(mockDbManager.loadMasters(any())).thenReturn(masters);
 			Mockito.when(mockDbManager.loadClients()).thenReturn(clients);
-			Mockito.when(mockDbManager.loadAccidents(any(), any())).thenReturn(accidents);
+			Mockito.when(mockDbManager.loadAccidents(any())).thenReturn(accidents);
 		} catch (SQLException e) {
 			e.printStackTrace();
 		}

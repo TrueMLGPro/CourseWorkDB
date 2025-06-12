@@ -54,7 +54,7 @@ public class ClientsTabUITest extends BaseUITest {
 		prepareTestData();
 		window.tabbedPane().selectTab("Клієнти");
 
-		JComboBoxFixture clientCombo = window.comboBox("clientAccidentIdField");
+		JComboBoxFixture clientCombo = window.comboBox("clientListNameField");
 		clientCombo.selectItem(0);
 
 		String clientId = (String) clientCombo.target().getSelectedItem();
@@ -74,8 +74,8 @@ public class ClientsTabUITest extends BaseUITest {
 		prepareTestData();
 		window.tabbedPane().selectTab("Клієнти");
 
-		int initialCount = getComboboxItemsCount("clientAccidentIdField");
-		JComboBoxFixture clientCombo = window.comboBox("clientAccidentIdField");
+		int initialCount = getComboboxItemsCount("clientListNameField");
+		JComboBoxFixture clientCombo = window.comboBox("clientListNameField");
 		clientCombo.selectItem(0);
 
 		String clientId = (String) clientCombo.target().getSelectedItem();
@@ -83,7 +83,7 @@ public class ClientsTabUITest extends BaseUITest {
 		window.button("deleteClientButton").click();
 
 		window.optionPane().requireInformationMessage().okButton().click();
-		assertEquals(initialCount, getComboboxItemsCount("clientAccidentIdField")); // Не зменшується при видаленні клієнта, якщо аварія ще існує
+		assertEquals(initialCount - 1, getComboboxItemsCount("clientListNameField"));
 	}
 
 	@GUITest
@@ -92,7 +92,7 @@ public class ClientsTabUITest extends BaseUITest {
 		prepareTestData();
 		window.tabbedPane().selectTab("Клієнти");
 
-		JComboBoxFixture clientCombo = window.comboBox("clientAccidentIdField");
+		JComboBoxFixture clientCombo = window.comboBox("clientListNameField");
 		clientCombo.selectItem(0);
 
 		String clientId = (String) clientCombo.target().getSelectedItem();

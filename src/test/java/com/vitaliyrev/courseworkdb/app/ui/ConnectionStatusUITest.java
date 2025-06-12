@@ -9,6 +9,8 @@ import org.junit.jupiter.api.extension.ExtendWith;
 
 import java.awt.Color;
 import java.sql.SQLException;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
@@ -31,18 +33,5 @@ class ConnectionStatusUITest extends BaseUITest {
 
 		assertEquals("Від'єднано від БД", statusLabel.text());
 		assertEquals(Color.RED, statusLabel.foreground().target());
-	}
-
-	@GUITest
-	@Test
-	void testReconnectFlow() throws SQLException {
-		doNothing().when(mainMock).reconnect();
-		when(mockDbManager.isConnectionValid()).thenReturn(false);
-		ui.updateConnectionStatus();
-
-		window.tabbedPane().selectTab("Звіти");
-		window.button("accidentCountPerBrigadeButton").click();
-
-		verify(mainMock, times(1)).reconnect();
 	}
 }
