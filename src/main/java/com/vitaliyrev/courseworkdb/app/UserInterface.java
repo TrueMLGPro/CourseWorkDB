@@ -24,7 +24,7 @@ public class UserInterface {
 	private JComboBox<String> addMasterStatusField; // Вибіркове поле для вибору стану майстра
 	private JComboBox<String> addMasterBrigadeField; // Вибіркове поле для вибору номера бригади майстра
 	private JComboBox<String> addMasterDepartmentField; // Вибіркове поле для вибору номера відділення майстра
-	private JComboBox<String> masterIndexField; // Вибіркове поле для вибору індекса майстра
+	private JComboBox<String> masterListNameField; // Вибіркове поле для вибору індекса майстра
 	private JTextField accidentStartDateField; // Поле для введення початкової дати для аварій
 	private JTextField accidentEndDateField; // Поле для введення кінцевої дати для аварій
 	private JTextField addAccidentDateField; // Поле для введення дати аварії
@@ -33,12 +33,13 @@ public class UserInterface {
 	private JComboBox<String> addAccidentStatusField; // Вибіркове поле для вибору стану аварії
 	private JTextField addAccidentAddressField; // Поле для введення адреси аварії
 	private JComboBox<String> addAccidentBrigadeField; // Вибіркове поле для вибору номера бригади аварії
-	private JComboBox<String> accidentIdField; // Вибіркове поле для вибору ID аварії
+	private JComboBox<String> accidentClientPhoneNumberField; // Вибіркове поле для вибору номера телефону клієнта
+	private JComboBox<String> accidentIndexField; // Вибіркове поле для вибору індексу аварії
 	private JTextField addClientNameField; // Поле для введення імені та прізвища клієнта
 	private JTextField addClientAddressField; // Поле для введення адреси клієнта
 	private JTextField addClientPhoneField; // Поле для введення номеру телефону клієнта
 	private JComboBox<String> addClientDepartmentField; // Вибіркове поле для вибору номера відділення клієнта
-	private JComboBox<String> clientAccidentIdField; // Вибіркове поле для вибору ID аварії клієнта
+	private JComboBox<String> clientListNameField; // Вибіркове поле для вибору ім'я клієнта
 	private JTextField reportClientNameField; // Поле для введення кінцевої дати для аварій
 	private JTextField reportStartDateField; // Поле для введення початкової дати для звітів
 	private JTextField reportEndDateField; // Поле для введення кінцевої дати для звітів
@@ -56,13 +57,11 @@ public class UserInterface {
 	private JButton accidentTypesButton; // Кнопка для відображення типів аварій
 	private JButton addAccidentButton; // Кнопка для додавання аварії
 	private JButton deleteAccidentButton; // Кнопка для видалення аварії
-	private JButton deleteAccidentAndClientButton; // Кнопка для видалення аварії та клієнта
 	private JButton listAccidentsButton; // Кнопка для відображення списку аварій
 	private JButton updateAccidentButton; // Кнопка для оновлення даних про аварію
 	private JButton countClientsButton; // Кнопка для підрахунку кількості клієнтів
 	private JButton addClientButton; // Кнопка для додавання клієнта
 	private JButton deleteClientButton; // Кнопка для видалення клієнта
-	private JButton deleteClientAndAccidentButton; // Кнопка для видалення клієнта та аварії
 	private JButton updateClientButton; // Кнопка для оновлення даних про клієнта
 	private JButton listClientsButton; // Кнопка для відображення списку клієнтів
 	private JButton mastersWithBrigadeInfoButton; // Кнопка для відображення майстрів з інформацією про бригади
@@ -170,9 +169,9 @@ public class UserInterface {
 		addField(fieldsPanel, gbc, "Адреса:", addMasterAddressField = new JTextField(30));
 		addField(fieldsPanel, gbc, "Номер телефону:", addMasterPhoneField = new JTextField(30));
 		addField(fieldsPanel, gbc, "Стаж:", addMasterExperienceField = new JTextField(30));
-		addField(fieldsPanel, gbc, "Стан:", addMasterStatusField = new JComboBox<>(main.getMasterStatuses().toArray(new String[0])));
-		addField(fieldsPanel, gbc, "Номер бригади:", addMasterBrigadeField = new JComboBox<>(main.getBrigadeAndDepartmentNumbers().toArray(new String[0])));
-		addField(fieldsPanel, gbc, "Номер відділення:", addMasterDepartmentField = new JComboBox<>(main.getBrigadeAndDepartmentNumbers().toArray(new String[0])));
+		addField(fieldsPanel, gbc, "Стан:", addMasterStatusField = new JComboBox<>(Main.getMasterStatuses().toArray(new String[0])));
+		addField(fieldsPanel, gbc, "Номер бригади:", addMasterBrigadeField = new JComboBox<>(Main.getBrigadeAndDepartmentNumbers().toArray(new String[0])));
+		addField(fieldsPanel, gbc, "Номер відділення:", addMasterDepartmentField = new JComboBox<>(Main.getBrigadeAndDepartmentNumbers().toArray(new String[0])));
 
 		gbc.gridx = 0;
 		gbc.gridy++;
@@ -180,13 +179,13 @@ public class UserInterface {
 		gbc.fill = GridBagConstraints.HORIZONTAL;
 		fieldsPanel.add(new JSeparator(SwingConstants.HORIZONTAL), gbc);
 
-		addField(fieldsPanel, gbc, "Індекс майстра:", masterIndexField = new JComboBox<>());
+		addField(fieldsPanel, gbc, "Майстер:", masterListNameField = new JComboBox<>());
 
-		masterIndexField.addActionListener(e -> {
-			String selectedId = (String) masterIndexField.getSelectedItem();
-			if (selectedId != null) {
-				int masterIndex = Integer.parseInt(selectedId);
-				loadMasterData(masterIndex); // Завантаження даних про вибраного майстра
+		masterListNameField.addActionListener(e -> {
+			String selectedMasterName = (String) masterListNameField.getSelectedItem();
+			if (selectedMasterName != null) {
+				Master selectedMaster = main.getMasterByName(selectedMasterName);
+				loadMasterData(selectedMaster.getName());
 			}
 		});
 
@@ -216,109 +215,16 @@ public class UserInterface {
 		return panel;
 	}
 
-	private JPanel createAccidentsTab() {
-		JPanel panel = new JPanel();
-		panel.setLayout(new BorderLayout());
-
-		JPanel buttonPanel = new JPanel();
-		buttonPanel.setLayout(new GridLayout(9, 1));
-
-		countAccidentsButton = new JButton("Кількість аварій з... по...");
-		averageCostButton = new JButton("Середня вартість усунення аварії");
-		accidentTypesButton = new JButton("Типи аварій у записах");
-		addAccidentButton = new JButton("Додати аварію");
-		deleteAccidentButton = new JButton("Видалити аварію");
-		deleteAccidentAndClientButton = new JButton("Видалити аварію та клієнта");
-		listAccidentsButton = new JButton("Список аварій");
-		updateAccidentButton = new JButton("Оновити аварію");
-		exitButton = new JButton("Вихід");
-
-		Dimension buttonSize = new Dimension(250, 20);
-		countAccidentsButton.setPreferredSize(buttonSize);
-		averageCostButton.setPreferredSize(buttonSize);
-		accidentTypesButton.setPreferredSize(buttonSize);
-		addAccidentButton.setPreferredSize(buttonSize);
-		deleteAccidentButton.setPreferredSize(buttonSize);
-		listAccidentsButton.setPreferredSize(buttonSize);
-		updateAccidentButton.setPreferredSize(buttonSize);
-		exitButton.setPreferredSize(buttonSize);
-
-		buttonPanel.add(countAccidentsButton);
-		buttonPanel.add(averageCostButton);
-		buttonPanel.add(accidentTypesButton);
-		buttonPanel.add(addAccidentButton);
-		buttonPanel.add(deleteAccidentButton);
-		buttonPanel.add(deleteAccidentAndClientButton);
-		buttonPanel.add(updateAccidentButton);
-		buttonPanel.add(listAccidentsButton);
-		buttonPanel.add(exitButton);
-
-		JPanel fieldsPanel = new JPanel();
-		fieldsPanel.setLayout(new GridBagLayout());
-		GridBagConstraints gbc = new GridBagConstraints();
-		gbc.insets = new Insets(5, 5, 5, 5);
-		gbc.fill = GridBagConstraints.HORIZONTAL;
-		gbc.anchor = GridBagConstraints.WEST;
-
-		addField(fieldsPanel, gbc, "Дата (dd/MM/yyyy):", addAccidentDateField = new JTextField(30));
-		addField(fieldsPanel, gbc, "Адреса:", addAccidentAddressField = new JTextField(30));
-		addField(fieldsPanel, gbc, "Тип аварії:", addAccidentTypeField = new JComboBox<>(main.getAccidentTypes().toArray(new String[0])));
-		addField(fieldsPanel, gbc, "Вартість:", addAccidentCostField = new JTextField(30));
-		addField(fieldsPanel, gbc, "Стан:", addAccidentStatusField = new JComboBox<>(main.getAccidentStatuses().toArray(new String[0])));
-		addField(fieldsPanel, gbc, "Номер бригади:", addAccidentBrigadeField = new JComboBox<>(main.getUsedDepartmentNumbers().toArray(new String[0])));
-
-		gbc.gridx = 0;
-		gbc.gridy++;
-		gbc.gridwidth = 2;
-		gbc.fill = GridBagConstraints.HORIZONTAL;
-		fieldsPanel.add(new JSeparator(SwingConstants.HORIZONTAL), gbc);
-
-		addField(fieldsPanel, gbc, "ID аварії:", accidentIdField = new JComboBox<>());
-		accidentIdField.addActionListener(e -> {
-			String selectedId = (String) accidentIdField.getSelectedItem();
-			if (selectedId != null) {
-				loadAccidentData(selectedId); // Завантаження даних про вибрану аварію
-			}
-		});
-
-		gbc.gridx = 0;
-		gbc.gridy++;
-		gbc.gridwidth = 2;
-		gbc.fill = GridBagConstraints.HORIZONTAL;
-		fieldsPanel.add(new JSeparator(SwingConstants.HORIZONTAL), gbc);
-
-		addField(fieldsPanel, gbc, "Початкова дата (dd/MM/yyyy):", accidentStartDateField = new JTextField(30));
-		addField(fieldsPanel, gbc, "Кінцева дата (dd/MM/yyyy):", accidentEndDateField = new JTextField(30));
-
-		populateAccidentComboBoxes(); // Заповнення вибіркових полів даними про аварії
-
-		panel.add(buttonPanel, BorderLayout.EAST);
-		panel.add(fieldsPanel, BorderLayout.CENTER);
-
-		countAccidentsButton.addActionListener(e -> countAccidents()); // Обробка натискання кнопки "Кількість аварій з... по..."
-		averageCostButton.addActionListener(e -> averageAccidentCost()); // Обробка натискання кнопки "Середня вартість усунення аварії"
-		accidentTypesButton.addActionListener(e -> accidentTypes()); // Обробка натискання кнопки "Типи аварій"
-		addAccidentButton.addActionListener(e -> addAccident()); // Обробка натискання кнопки "Додати аварію"
-		deleteAccidentButton.addActionListener(e -> deleteAccident()); // Обробка натискання кнопки "Видалити аварію"
-		deleteAccidentAndClientButton.addActionListener(e -> deleteAccidentAndClient());
-		listAccidentsButton.addActionListener(e -> listAccidents()); // Обробка натискання кнопки "Список аварій"
-		updateAccidentButton.addActionListener(e -> updateAccident()); // Обробка натискання кнопки "Оновити аварію"
-		exitButton.addActionListener(e -> exitApplication()); // Обробка натискання кнопки "Вихід"
-
-		return panel;
-	}
-
 	private JPanel createClientsTab() {
 		JPanel panel = new JPanel();
 		panel.setLayout(new BorderLayout());
 
 		JPanel buttonPanel = new JPanel();
-		buttonPanel.setLayout(new GridLayout(7, 1));
+		buttonPanel.setLayout(new GridLayout(6, 1));
 
 		countClientsButton = new JButton("Кількість клієнтів");
 		addClientButton = new JButton("Додати клієнта");
 		deleteClientButton = new JButton("Видалити клієнта");
-		deleteClientAndAccidentButton = new JButton("Видалити клієнта та аварію");
 		updateClientButton = new JButton("Оновити клієнта");
 		listClientsButton = new JButton("Список клієнтів");
 		exitButton = new JButton("Вихід");
@@ -334,7 +240,6 @@ public class UserInterface {
 		buttonPanel.add(countClientsButton);
 		buttonPanel.add(addClientButton);
 		buttonPanel.add(deleteClientButton);
-		buttonPanel.add(deleteClientAndAccidentButton);
 		buttonPanel.add(updateClientButton);
 		buttonPanel.add(listClientsButton);
 		buttonPanel.add(exitButton);
@@ -357,10 +262,10 @@ public class UserInterface {
 		gbc.fill = GridBagConstraints.HORIZONTAL;
 		fieldsPanel.add(new JSeparator(SwingConstants.HORIZONTAL), gbc);
 
-		addField(fieldsPanel, gbc, "ID аварії:", clientAccidentIdField = new JComboBox<>());
+		addField(fieldsPanel, gbc, "Клієнт:", clientListNameField = new JComboBox<>());
 
-		clientAccidentIdField.addActionListener(e -> {
-			String selectedId = (String) clientAccidentIdField.getSelectedItem();
+		clientListNameField.addActionListener(e -> {
+			String selectedId = (String) clientListNameField.getSelectedItem();
 			if (selectedId != null) {
 				loadClientData(selectedId); // Завантаження даних про вибраного клієнта
 			}
@@ -380,9 +285,104 @@ public class UserInterface {
 		countClientsButton.addActionListener(e -> countClients()); // Обробка натискання кнопки "Кількість клієнтів"
 		addClientButton.addActionListener(e -> addClient()); // Обробка натискання кнопки "Додати клієнта"
 		deleteClientButton.addActionListener(e -> deleteClient()); // Обробка натискання кнопки "Видалити клієнта"
-		deleteClientAndAccidentButton.addActionListener(e -> deleteClientAndAccident()); // Обробка натискання кнопки "Видалити клієнта та аварію"
 		updateClientButton.addActionListener(e -> updateClient()); // Обробка натискання кнопки "Оновити клієнта"
 		listClientsButton.addActionListener(e -> listClients()); // Обробка натискання кнопки "Список клієнтів"
+		exitButton.addActionListener(e -> exitApplication()); // Обробка натискання кнопки "Вихід"
+
+		return panel;
+	}
+
+	private JPanel createAccidentsTab() {
+		JPanel panel = new JPanel();
+		panel.setLayout(new BorderLayout());
+
+		JPanel buttonPanel = new JPanel();
+		buttonPanel.setLayout(new GridLayout(8, 1));
+
+		countAccidentsButton = new JButton("Кількість аварій з... по...");
+		averageCostButton = new JButton("Середня вартість усунення аварії");
+		accidentTypesButton = new JButton("Типи аварій у записах");
+		addAccidentButton = new JButton("Додати аварію");
+		deleteAccidentButton = new JButton("Видалити аварію");
+		listAccidentsButton = new JButton("Список аварій");
+		updateAccidentButton = new JButton("Оновити аварію");
+		exitButton = new JButton("Вихід");
+
+		Dimension buttonSize = new Dimension(250, 20);
+		countAccidentsButton.setPreferredSize(buttonSize);
+		averageCostButton.setPreferredSize(buttonSize);
+		accidentTypesButton.setPreferredSize(buttonSize);
+		addAccidentButton.setPreferredSize(buttonSize);
+		deleteAccidentButton.setPreferredSize(buttonSize);
+		listAccidentsButton.setPreferredSize(buttonSize);
+		updateAccidentButton.setPreferredSize(buttonSize);
+		exitButton.setPreferredSize(buttonSize);
+
+		buttonPanel.add(countAccidentsButton);
+		buttonPanel.add(averageCostButton);
+		buttonPanel.add(accidentTypesButton);
+		buttonPanel.add(addAccidentButton);
+		buttonPanel.add(deleteAccidentButton);
+		buttonPanel.add(updateAccidentButton);
+		buttonPanel.add(listAccidentsButton);
+		buttonPanel.add(exitButton);
+
+		JPanel fieldsPanel = new JPanel();
+		fieldsPanel.setLayout(new GridBagLayout());
+		GridBagConstraints gbc = new GridBagConstraints();
+		gbc.insets = new Insets(5, 5, 5, 5);
+		gbc.fill = GridBagConstraints.HORIZONTAL;
+		gbc.anchor = GridBagConstraints.WEST;
+
+		addField(fieldsPanel, gbc, "Дата (dd/MM/yyyy):", addAccidentDateField = new JTextField(30));
+		addField(fieldsPanel, gbc, "Адреса:", addAccidentAddressField = new JTextField(30));
+		addField(fieldsPanel, gbc, "Тип аварії:", addAccidentTypeField = new JComboBox<>(Main.getAccidentTypes().toArray(new String[0])));
+		addField(fieldsPanel, gbc, "Вартість:", addAccidentCostField = new JTextField(30));
+		addField(fieldsPanel, gbc, "Стан:", addAccidentStatusField = new JComboBox<>(Main.getAccidentStatuses().toArray(new String[0])));
+		addField(fieldsPanel, gbc, "Номер бригади:", addAccidentBrigadeField = new JComboBox<>(main.getUsedDepartmentNumbers().toArray(new String[0])));
+
+		gbc.gridx = 0;
+		gbc.gridy++;
+		gbc.gridwidth = 2;
+		gbc.fill = GridBagConstraints.HORIZONTAL;
+		fieldsPanel.add(new JSeparator(SwingConstants.HORIZONTAL), gbc);
+
+		addField(fieldsPanel, gbc, "Номер телефону клієнта:", accidentClientPhoneNumberField = new JComboBox<>());
+		accidentClientPhoneNumberField.addActionListener(e -> {
+			String selectedPhoneNumber = (String) accidentClientPhoneNumberField.getSelectedItem();
+			populateClientAccidentIndexComboBox(selectedPhoneNumber);
+		});
+
+		addField(fieldsPanel, gbc, "ID аварії:", accidentIndexField = new JComboBox<>());
+		accidentIndexField.addActionListener(e -> {
+			String selectedPhoneNumber = (String) accidentClientPhoneNumberField.getSelectedItem();
+			String selectedId = (String) accidentIndexField.getSelectedItem();
+			if (selectedId != null) {
+				loadAccidentData(selectedPhoneNumber, Integer.parseInt(selectedId)); // Завантаження даних про вибрану аварію
+			}
+		});
+
+		gbc.gridx = 0;
+		gbc.gridy++;
+		gbc.gridwidth = 2;
+		gbc.fill = GridBagConstraints.HORIZONTAL;
+		fieldsPanel.add(new JSeparator(SwingConstants.HORIZONTAL), gbc);
+
+		addField(fieldsPanel, gbc, "Початкова дата (dd/MM/yyyy):", accidentStartDateField = new JTextField(30));
+		addField(fieldsPanel, gbc, "Кінцева дата (dd/MM/yyyy):", accidentEndDateField = new JTextField(30));
+
+		populateAccidentComboBoxes(); // Заповнення вибіркових полів даними про аварії
+
+		panel.add(buttonPanel, BorderLayout.EAST);
+		panel.add(fieldsPanel, BorderLayout.CENTER);
+
+		countAccidentsButton.addActionListener(e -> countAccidents()); // Обробка натискання кнопки "Кількість аварій з... по..."
+		averageCostButton.addActionListener(e -> averageAccidentCost()); // Обробка натискання кнопки "Середня вартість усунення аварії"
+		accidentTypesButton.addActionListener(e -> accidentTypes()); // Обробка натискання кнопки "Типи аварій"
+		addAccidentButton.addActionListener(e -> addAccident()); // Обробка натискання кнопки "Додати аварію"
+		deleteAccidentButton.addActionListener(e -> deleteAccident()); // Обробка натискання кнопки "Видалити аварію"
+		listAccidentsButton.addActionListener(e -> listAccidents()); // Обробка натискання кнопки "Список аварій"
+		updateAccidentButton.addActionListener(e -> updateAccident()); // Обробка натискання кнопки "Оновити аварію"
 		exitButton.addActionListener(e -> exitApplication()); // Обробка натискання кнопки "Вихід"
 
 		return panel;
@@ -446,10 +446,14 @@ public class UserInterface {
 		panel.add(buttonPanel, BorderLayout.EAST);
 		panel.add(fieldsPanel, BorderLayout.CENTER);
 
-		// Add action listeners
 		mastersWithBrigadeInfoButton.addActionListener(e -> {
 			String result = main.getMastersWithBrigadeInfo();
-			resultArea.setText("Майстри з інформацією про бригади:\n" + result);
+			// Null check for the result string
+			if (result != null && !result.isEmpty()) {
+				resultArea.setText("Майстри з інформацією про бригади:\n" + result);
+			} else {
+				resultArea.setText("Не знайдено майстрів з інформацією про бригади або виникла помилка.");
+			}
 		});
 
 		findClientsByNameButton.addActionListener(e -> {
@@ -459,7 +463,12 @@ public class UserInterface {
 				return;
 			}
 			String result = main.findClientsByNamePattern(namePattern);
-			resultArea.setText("Клієнти за іменем '" + namePattern + "':\n" + result);
+			// Null check for the result string
+			if (result != null && !result.isEmpty()) {
+				resultArea.setText("Клієнти за іменем '" + namePattern + "':\n" + result);
+			} else {
+				resultArea.setText("Не знайдено клієнтів за іменем '" + namePattern + "' або виникла помилка.");
+			}
 		});
 
 		accidentsBetweenDatesButton.addActionListener(e -> {
@@ -469,7 +478,11 @@ public class UserInterface {
 				Date startDate = main.getDateFormat().parse(startDateStr);
 				Date endDate = main.getDateFormat().parse(endDateStr);
 				String result = main.getAccidentsBetweenDates(startDate, endDate);
-				resultArea.setText("Аварії з " + startDateStr + " по " + endDateStr + ":\n" + result);
+				if (result != null && !result.isEmpty()) {
+					resultArea.setText("Аварії з " + startDateStr + " по " + endDateStr + ":\n" + result);
+				} else {
+					resultArea.setText("Не знайдено аварій за вказаний період або виникла помилка.");
+				}
 			} catch (ParseException ex) {
 				showErrorOptionPane("Неправильний формат дати. Використовуйте dd/MM/yyyy");
 			}
@@ -477,52 +490,84 @@ public class UserInterface {
 
 		accidentCountLastWeekButton.addActionListener(e -> {
 			int count = main.getAccidentCountLastWeek();
-			resultArea.setText("Кількість аварій за минулий тиждень: " + count);
+			if (count >= 0) {
+				resultArea.setText("Кількість аварій за минулий тиждень: " + count);
+			} else {
+				resultArea.setText("Не вдалося отримати кількість аварій за минулий тиждень.");
+			}
 		});
 
 		accidentCountPerBrigadeButton.addActionListener(e -> {
 			Map<Integer, Integer> counts = main.getAccidentCountPerBrigade();
 			StringBuilder sb = new StringBuilder("Кількість аварій по бригадах:\n");
-			counts.forEach((brigade, count) ->
-					sb.append("Бригада ").append(brigade).append(": ").append(count).append(" аварій\n"));
-			resultArea.setText(sb.toString());
+			if (counts != null && !counts.isEmpty()) {
+				counts.forEach((brigade, count) ->
+						sb.append("Бригада ").append(brigade).append(": ").append(count).append(" аварій\n"));
+				resultArea.setText(sb.toString());
+			} else {
+				resultArea.setText("Не знайдено даних про кількість аварій по бригадах або виникла помилка.");
+			}
 		});
 
 		maxAccidentBrigadesButton.addActionListener(e -> {
 			List<Integer> brigades = main.getBrigadesWithMaxAccidents();
 			StringBuilder sb = new StringBuilder("Бригади з максимальною кількістю аварій:\n");
-			brigades.forEach(brigade -> sb.append("Бригада ").append(brigade).append("\n"));
-			resultArea.setText(sb.toString());
+			if (brigades != null && !brigades.isEmpty()) {
+				brigades.forEach(brigade -> sb.append("Бригада ").append(brigade).append("\n"));
+				resultArea.setText(sb.toString());
+			} else {
+				resultArea.setText("Не знайдено бригад з максимальною кількістю аварій або виникла помилка.");
+			}
 		});
 
 		topBrigadePerTypeButton.addActionListener(e -> {
 			Map<String, Integer> topBrigades = main.getTopBrigadePerAccidentType();
 			StringBuilder sb = new StringBuilder("Найактивніші бригади по типах аварій:\n");
-			topBrigades.forEach((type, brigade) ->
-					sb.append(type).append(": Бригада ").append(brigade).append("\n"));
-			resultArea.setText(sb.toString());
+			if (topBrigades != null && !topBrigades.isEmpty()) {
+				topBrigades.forEach((type, brigade) ->
+						sb.append(type).append(": Бригада ").append(brigade).append("\n"));
+				resultArea.setText(sb.toString());
+			} else {
+				resultArea.setText("Не знайдено найактивніших бригад по типах аварій або виникла помилка.");
+			}
 		});
 
 		inactiveBrigadesLeftJoinButton.addActionListener(e -> {
 			List<Integer> brigades = main.getInactiveBrigadesLeftJoin();
-			showInactiveBrigades("LEFT JOIN", brigades);
+			if (brigades != null) {
+				showInactiveBrigades("LEFT JOIN", brigades);
+			} else {
+				resultArea.setText("Не вдалося отримати неактивні бригади (LEFT JOIN) або виникла помилка.");
+			}
 		});
 
 		inactiveBrigadesInButton.addActionListener(e -> {
 			List<Integer> brigades = main.getInactiveBrigadesIn();
-			showInactiveBrigades("NOT IN", brigades);
+			if (brigades != null) {
+				showInactiveBrigades("NOT IN", brigades);
+			} else {
+				resultArea.setText("Не вдалося отримати неактивні бригади (NOT IN) або виникла помилка.");
+			}
 		});
 
 		inactiveBrigadesExistsButton.addActionListener(e -> {
 			List<Integer> brigades = main.getInactiveBrigadesExists();
-			showInactiveBrigades("NOT EXISTS", brigades);
+			if (brigades != null) {
+				showInactiveBrigades("NOT EXISTS", brigades);
+			} else {
+				resultArea.setText("Не вдалося отримати неактивні бригади (NOT EXISTS) або виникла помилка.");
+			}
 		});
 
 		brigadeActivityStatusButton.addActionListener(e -> {
 			List<String> statuses = main.getBrigadesWithActivityStatus();
 			StringBuilder sb = new StringBuilder("Статус активності бригад:\n");
-			statuses.forEach(status -> sb.append(status).append("\n"));
-			resultArea.setText(sb.toString());
+			if (statuses != null && !statuses.isEmpty()) {
+				statuses.forEach(status -> sb.append(status).append("\n"));
+				resultArea.setText(sb.toString());
+			} else {
+				resultArea.setText("Не знайдено статусів активності бригад або виникла помилка.");
+			}
 		});
 
 		return panel;
@@ -596,13 +641,14 @@ public class UserInterface {
 	private void clearDeleteFields(FIELD_TYPES entity) {
 		switch (entity) {
 			case MASTER_FIELD:
-				masterIndexField.setSelectedIndex(-1);
+				masterListNameField.setSelectedIndex(-1);
 				break;
 			case ACCIDENT_FIELD:
-				accidentIdField.setSelectedIndex(-1);
+				accidentClientPhoneNumberField.setSelectedIndex(-1);
+				accidentIndexField.setSelectedIndex(-1);
 				break;
 			case CLIENT_FIELD:
-				clientAccidentIdField.setSelectedIndex(-1);
+				clientListNameField.setSelectedIndex(-1);
 				break;
 		}
 	}
@@ -629,14 +675,12 @@ public class UserInterface {
 		accidentTypesButton.setName("accidentTypesButton");
 		addAccidentButton.setName("addAccidentButton");
 		deleteAccidentButton.setName("deleteAccidentButton");
-		deleteAccidentAndClientButton.setName("deleteAccidentAndClientButton");
 		updateAccidentButton.setName("updateAccidentButton");
 		listAccidentsButton.setName("listAccidentsButton");
 
 		countClientsButton.setName("countClientsButton");
 		addClientButton.setName("addClientButton");
 		deleteClientButton.setName("deleteClientButton");
-		deleteClientAndAccidentButton.setName("deleteClientAndAccidentButton");
 		updateClientButton.setName("updateClientButton");
 		listClientsButton.setName("listClientsButton");
 
@@ -659,15 +703,16 @@ public class UserInterface {
 		addMasterStatusField.setName("addMasterStatusField");
 		addMasterBrigadeField.setName("addMasterBrigadeField");
 		addMasterDepartmentField.setName("addMasterDepartmentField");
-		masterIndexField.setName("masterIndexField");
+		masterListNameField.setName("masterListNameField");
 
 		addAccidentTypeField.setName("addAccidentTypeField");
 		addAccidentStatusField.setName("addAccidentStatusField");
 		addAccidentBrigadeField.setName("addAccidentBrigadeField");
-		accidentIdField.setName("accidentIdField");
+		accidentClientPhoneNumberField.setName("accidentClientPhoneNumberField");
+		accidentIndexField.setName("accidentIndexField");
 
 		addClientDepartmentField.setName("addClientDepartmentField");
-		clientAccidentIdField.setName("clientAccidentIdField");
+		clientListNameField.setName("clientListNameField");
 	}
 
 	private void setTextFieldNames() {
@@ -719,14 +764,16 @@ public class UserInterface {
 	}
 
 	private void calculateMasterSalary() {
-		validateField(masterIndexField, "Індекс майстра");
-		int masterIndex = Integer.parseInt(masterIndexField.getSelectedItem().toString());
+		validateField(masterListNameField, "Майстер");
+
+		String masterName = masterListNameField.getSelectedItem().toString();
+		Master selectedMaster = main.getMasterByName(masterName);
 		Date startDate = parseDate(masterStartDateField.getText());
 		Date endDate = parseDate(masterEndDateField.getText());
 
-		if (startDate != null && endDate != null && masterIndex != -1) {
-			double salary = main.getMasterSalaryBetweenDates(masterIndex, startDate, endDate);
-			resultArea.setText("Заробіток майстра з індексом " + masterIndex + " з " + main.getDateFormat().format(startDate) + " по " + main.getDateFormat().format(endDate) + " : " + salary);
+		if (startDate != null && endDate != null) {
+			double salary = main.getMasterSalaryBetweenDates(selectedMaster.getIndex(), startDate, endDate);
+			resultArea.setText("Заробіток майстра " + masterName + " за період з " + main.getDateFormat().format(startDate) + " по " + main.getDateFormat().format(endDate) + " : " + salary);
 		} else {
 			resultArea.setText("Неправильний формат дати. Використовуйте dd/MM/yyyy.");
 		}
@@ -765,6 +812,7 @@ public class UserInterface {
 			int departmentNumber = Integer.parseInt((String) addMasterDepartmentField.getSelectedItem());
 
 			int newIndex = main.getNextMasterIndex();
+
 			Brigade brigade = new Brigade(brigadeNumber);
 			Master master = new Master(newIndex, name, address, phoneNumber, experience, status, brigade, departmentNumber);
 			main.getMasters().add(master);
@@ -782,21 +830,22 @@ public class UserInterface {
 
 	private void deleteMaster() {
 		try {
-			validateField(masterIndexField, "Індекс майстра");
-			int masterIndex = Integer.parseInt(masterIndexField.getSelectedItem().toString());
-			Master masterToRemove = main.getMasterByIndex(masterIndex);
+			validateField(masterListNameField, "Майстер");
+
+			String masterName = (String) masterListNameField.getSelectedItem();
+			Master masterToRemove = main.getMasterByName(masterName);
 			if (masterToRemove != null) {
 				main.getMasters().remove(masterToRemove);
 				masterToRemove.getBrigade().removeMaster(masterToRemove);
 				main.dbManager.deleteMaster(masterToRemove.getIndex());
 				main.saveAllData();
-				showSuccessOptionPane("Майстра з індексом " + masterIndex + " видалено успішно!");
+				showSuccessOptionPane("Майстра \"" + masterName + "\" видалено успішно!");
 				clearDeleteFields(FIELD_TYPES.MASTER_FIELD);
 				populateMasterComboBoxes();
 				populateClientComboBoxes();
 				populateAccidentComboBoxes();
 			} else {
-				showErrorOptionPane("Майстра з індексом " + masterIndex + " не знайдено.");
+				showErrorOptionPane("Майстра \"" + masterName + "\" не знайдено.");
 			}
 		} catch (SQLException | IllegalArgumentException ex) {
 			showErrorOptionPane("Помилка видалення майстра: " + ex.getMessage());
@@ -813,8 +862,8 @@ public class UserInterface {
 			validateField(addMasterBrigadeField, "Номер бригади");
 			validateField(addMasterDepartmentField, "Номер відділення");
 
-			int masterIndex = Integer.parseInt(masterIndexField.getSelectedItem().toString());
-			Master masterToUpdate = main.getMasterByIndex(masterIndex);
+			String masterName = (String) masterListNameField.getSelectedItem();
+			Master masterToUpdate = main.getMasterByName(masterName);
 			if (masterToUpdate != null) {
 				String name = addMasterNameField.getText();
 				String address = addMasterAddressField.getText();
@@ -833,13 +882,13 @@ public class UserInterface {
 				masterToUpdate.setDepartmentNumber(departmentNumber);
 
 				main.saveAllData();
-				showSuccessOptionPane("Майстра з індексом " + masterIndex + " оновлено успішно!");
+				showSuccessOptionPane("Майстра \"" + masterName + "\" оновлено успішно!");
 				clearAddFields(FIELD_TYPES.MASTER_FIELD);
 				populateMasterComboBoxes();
 				populateClientComboBoxes();
 				populateAccidentComboBoxes();
 			} else {
-				showErrorOptionPane("Майстра з індексом " + masterIndex + " не знайдено.");
+				showErrorOptionPane("Майстра з індексом " + masterName + " не знайдено.");
 			}
 		} catch (IllegalArgumentException ex) {
 			showErrorOptionPane("Помилка оновлення майстра: " + ex.getMessage());
@@ -847,14 +896,13 @@ public class UserInterface {
 	}
 
 	private void listMasters() {
-		StringBuilder sb = new StringBuilder("Список майстрів:\n");
+		StringBuilder sb = new StringBuilder("Список майстрів\n");
 
 		Map<Integer, Master> uniqueMasters = new LinkedHashMap<>();
 		for (Master master : main.getMasters()) {
 			uniqueMasters.put(master.getIndex(), master);
 		}
 
-		int indexWidth = "Індекс".length();
 		int nameWidth = "Ім'я та прізвище".length();
 		int addressWidth = "Адреса".length();
 		int phoneWidth = "Номер телефону".length();
@@ -864,7 +912,6 @@ public class UserInterface {
 		int departmentWidth = "Номер відділення".length();
 
 		for (Master master : uniqueMasters.values()) {
-			indexWidth = Math.max(indexWidth, String.valueOf(master.getIndex()).length());
 			nameWidth = Math.max(nameWidth, master.getName().length());
 			addressWidth = Math.max(addressWidth, master.getAddress().length());
 			phoneWidth = Math.max(phoneWidth, master.getPhoneNumber().length());
@@ -874,17 +921,16 @@ public class UserInterface {
 			departmentWidth = Math.max(departmentWidth, String.valueOf(master.getDepartmentNumber()).length());
 		}
 
-		String format = String.format("%%-%ds %%-%ds %%-%ds %%-%ds %%-%ds %%-%ds %%-%ds %%-%ds\n",
-				indexWidth, nameWidth, addressWidth, phoneWidth, experienceWidth, statusWidth, brigadeWidth, departmentWidth);
+		String format = String.format("%%-%ds  %%-%ds  %%-%ds  %%-%ds  %%-%ds  %%-%ds  %%-%ds\n",
+				nameWidth, addressWidth, phoneWidth, experienceWidth, statusWidth, brigadeWidth, departmentWidth);
 
-		sb.append(String.format(format, "Індекс", "Ім'я та прізвище", "Адреса", "Номер телефону", "Стаж", "Стан", "Номер бригади", "Номер відділення"));
-		sb.append(String.format(format, "-".repeat(indexWidth), "-".repeat(nameWidth), "-".repeat(addressWidth),
+		sb.append(String.format(format, "Ім'я та прізвище", "Адреса", "Номер телефону", "Стаж", "Стан", "Номер бригади", "Номер відділення"));
+		sb.append(String.format(format, "-".repeat(nameWidth), "-".repeat(addressWidth),
 				"-".repeat(phoneWidth), "-".repeat(experienceWidth), "-".repeat(statusWidth), "-".repeat(brigadeWidth),
 				"-".repeat(departmentWidth)));
 
 		for (Master master : uniqueMasters.values()) {
 			sb.append(String.format(format,
-					master.getIndex(),
 					master.getName(),
 					master.getAddress(),
 					master.getPhoneNumber(),
@@ -892,6 +938,136 @@ public class UserInterface {
 					master.getStatus(),
 					master.getBrigade().getNumber(),
 					master.getDepartmentNumber()
+			));
+		}
+		resultArea.setText(sb.toString());
+	}
+
+	private void countClients() {
+		resultArea.setText("Кількість клієнтів: " + main.getClients().size());
+	}
+
+	private void addClient() {
+		try {
+			validateField(addClientNameField, "Ім'я та прізвище");
+			validateField(addClientAddressField, "Адреса");
+			validateField(addClientPhoneField, "Номер телефону");
+			validateField(addClientDepartmentField, "Номер відділення");
+
+			String name = addClientNameField.getText();
+			String address = addClientAddressField.getText();
+			String phoneNumber = addClientPhoneField.getText();
+			int departmentNumber = Integer.parseInt((String) addClientDepartmentField.getSelectedItem());
+
+			int nextClientIndex = main.getNextClientIndex();
+
+			Client client = new Client(nextClientIndex, name, address, phoneNumber, departmentNumber);
+			main.getClients().add(client);
+
+			main.saveAllData();
+			showSuccessOptionPane("Клієнта додано успішно!");
+			clearAddFields(FIELD_TYPES.CLIENT_FIELD);
+			populateClientComboBoxes();
+			populateAccidentComboBoxes();
+		} catch (IllegalArgumentException ex) {
+			showErrorOptionPane("Помилка додавання клієнта: " + ex.getMessage());
+		}
+	}
+
+	private void deleteClient() {
+		try {
+			validateField(clientListNameField, "Клієнт");
+
+			String clientName = (String) clientListNameField.getSelectedItem();
+			Client clientToRemove = main.getClientByName(clientName);
+			if (clientToRemove != null) {
+				main.dbManager.deleteClient(clientToRemove.getIndex());
+				main.getClients().remove(clientToRemove);
+
+				main.saveAllData();
+				showSuccessOptionPane("Клієнта \"" + clientName + "\" видалено успішно!");
+				clearDeleteFields(FIELD_TYPES.CLIENT_FIELD);
+				populateClientComboBoxes();
+				populateAccidentComboBoxes();
+			} else {
+				showErrorOptionPane("Клієнта \"" + clientName + "\" не знайдено.");
+			}
+		} catch (SQLException | IllegalArgumentException ex) {
+			showErrorOptionPane("Помилка видалення клієнта: " + ex.getMessage());
+		}
+	}
+
+	private void updateClient() {
+		try {
+			validateField(addClientNameField, "Ім'я та прізвище");
+			validateField(addClientAddressField, "Адреса");
+			validateField(addClientPhoneField, "Номер телефону");
+			validateField(addClientDepartmentField, "Номер відділення");
+			validateField(clientListNameField, "Клієнт");
+
+			String clientName = (String) clientListNameField.getSelectedItem();
+			Client clientToUpdate = main.getClientByName(clientName);
+
+			if (clientToUpdate == null) {
+				int nextClientIndex = main.getNextClientIndex();
+				clientToUpdate = new Client(
+						nextClientIndex,
+						addClientNameField.getText(),
+						addClientAddressField.getText(),
+						addClientPhoneField.getText(),
+						Integer.parseInt((String) addClientDepartmentField.getSelectedItem())
+				);
+				main.getClients().add(clientToUpdate);
+			} else {
+				clientToUpdate.setName(addClientNameField.getText());
+				clientToUpdate.setAddress(addClientAddressField.getText());
+				clientToUpdate.setPhoneNumber(addClientPhoneField.getText());
+				clientToUpdate.setDepartmentNumber(Integer.parseInt((String) addClientDepartmentField.getSelectedItem()));
+			}
+
+			main.saveAllData();
+			showSuccessOptionPane("Клієнта \"" + clientName + "\" оновлено успішно!");
+			clearAddFields(FIELD_TYPES.CLIENT_FIELD);
+			populateClientComboBoxes();
+			populateAccidentComboBoxes();
+		} catch (IllegalArgumentException ex) {
+			showErrorOptionPane("Помилка оновлення клієнта: " + ex.getMessage());
+		}
+	}
+
+	private void listClients() {
+		StringBuilder sb = new StringBuilder("Список клієнтів\n");
+
+		Map<Integer, Client> uniqueClients = new LinkedHashMap<>();
+		for (Client client : main.getClients()) {
+			uniqueClients.put(client.getIndex(), client);
+		}
+
+		int nameWidth = "Ім'я та прізвище".length();
+		int addressWidth = "Адреса".length();
+		int phoneWidth = "Номер телефону".length();
+		int departmentWidth = "Номер відділення".length();
+
+		for (Client client : uniqueClients.values()) {
+			nameWidth = Math.max(nameWidth, client.getName().length());
+			addressWidth = Math.max(addressWidth, client.getAddress().length());
+			phoneWidth = Math.max(phoneWidth, client.getPhoneNumber().length());
+			departmentWidth = Math.max(departmentWidth, String.valueOf(client.getDepartmentNumber()).length());
+		}
+
+		String format = String.format("%%-%ds  %%-%ds  %%-%ds  %%-%ds\n",
+				nameWidth, addressWidth, phoneWidth, departmentWidth);
+
+		sb.append(String.format(format, "Ім'я та прізвище", "Адреса", "Номер телефону", "Номер відділення"));
+		sb.append(String.format(format, "-".repeat(nameWidth),
+				"-".repeat(addressWidth), "-".repeat(phoneWidth), "-".repeat(departmentWidth)));
+
+		for (Client client : uniqueClients.values()) {
+			sb.append(String.format(format,
+					client.getName(),
+					client.getAddress(),
+					client.getPhoneNumber(),
+					client.getDepartmentNumber()
 			));
 		}
 		resultArea.setText(sb.toString());
@@ -941,6 +1117,7 @@ public class UserInterface {
 			validateField(addAccidentCostField, "Вартість");
 			validateField(addAccidentStatusField, "Стан");
 			validateField(addAccidentBrigadeField, "Номер бригади");
+			validateField(accidentClientPhoneNumberField, "Номер телефону клієнта");
 
 			Date date = parseDate(addAccidentDateField.getText());
 			String address = addAccidentAddressField.getText();
@@ -949,17 +1126,19 @@ public class UserInterface {
 			String status = (String) addAccidentStatusField.getSelectedItem();
 			int brigadeNumber = Integer.parseInt((String) addAccidentBrigadeField.getSelectedItem());
 
+			String accidentClientPhoneNumber = (String) accidentClientPhoneNumberField.getSelectedItem();
 			int newIndex = main.getNextAccidentIndex();
-			String newAccidentId = newIndex + "-" + Main.generateRandomString(8);
+			int newClientAccidentIndex = main.getNextAccidentIndexForClient(accidentClientPhoneNumber);
 
 			Brigade brigade = new Brigade(brigadeNumber);
-			Accident accident = new Accident(newIndex, newAccidentId, address, type, cost, date, brigade, status);
+			Accident accident = new Accident(newIndex, address, type, cost, date, brigade, status, accidentClientPhoneNumber, newClientAccidentIndex);
 			main.getAccidents().add(accident);
 			main.saveAllData();
 			showSuccessOptionPane("Аварію додано успішно!");
 			clearAddFields(FIELD_TYPES.ACCIDENT_FIELD);
 			populateAccidentComboBoxes();
 			populateClientComboBoxes();
+			populateClientAccidentIndexComboBox(accidentClientPhoneNumber);
 		} catch (IllegalArgumentException ex) {
 			showErrorOptionPane("Помилка додавання аварії: " + ex.getMessage());
 		}
@@ -967,55 +1146,27 @@ public class UserInterface {
 
 	private void deleteAccident() {
 		try {
-			validateField(accidentIdField, "ID аварії");
-			String accidentId = (String) accidentIdField.getSelectedItem();
-			Accident accidentToRemove = main.getAccidentById(accidentId);
-			if (accidentToRemove != null) {
-				// Break the association before deletion
-				Client associatedClient = main.getClientByAccidentId(accidentId);
-				if (associatedClient != null) {
-					associatedClient.setAccident(null);
-				}
+			validateField(accidentClientPhoneNumberField, "Номер телефону клієнта");
+			validateField(accidentIndexField, "Iндекс аварії");
 
-				// Now delete the accident
-				main.dbManager.deleteAccident(accidentToRemove.getIndex());
+			String accidentClientPhoneNumber = (String) accidentClientPhoneNumberField.getSelectedItem();
+			String accidentIndex = (String) accidentIndexField.getSelectedItem();
+			Accident accidentToRemove = main.getAccidentByPhoneNumAccIndex(accidentClientPhoneNumber, Integer.parseInt(accidentIndex));
+			if (accidentToRemove != null) {
+				main.dbManager.deleteAccident(Integer.parseInt(accidentIndex));
 				main.getAccidents().remove(accidentToRemove);
 
 				main.saveAllData();
-				showSuccessOptionPane("Аварію з ID " + accidentId + " видалено успішно!");
+				showSuccessOptionPane("Аварію з ID " + accidentIndex + " видалено успішно!");
 				clearDeleteFields(FIELD_TYPES.ACCIDENT_FIELD);
 				populateAccidentComboBoxes();
 				populateClientComboBoxes();
+				populateClientAccidentIndexComboBox(accidentClientPhoneNumber);
 			} else {
-				showErrorOptionPane("Аварію з ID " + accidentId + " не знайдено.");
+				showErrorOptionPane("Аварію з ID " + accidentIndex + " не знайдено.");
 			}
 		} catch (SQLException | IllegalArgumentException ex) {
 			showErrorOptionPane("Помилка видалення аварії: " + ex.getMessage());
-		}
-	}
-
-	private void deleteAccidentAndClient() {
-		try {
-			validateField(accidentIdField, "ID аварії");
-			String accidentId = (String) accidentIdField.getSelectedItem();
-			Accident accidentToRemove = main.getAccidentById(accidentId);
-			Client clientToRemove = main.getClientByAccidentId(accidentId);
-
-			if (accidentToRemove != null && clientToRemove != null) {
-				main.dbManager.deleteAccident(accidentToRemove.getIndex());
-				main.getAccidents().remove(accidentToRemove);
-				main.getClients().remove(clientToRemove);
-
-				main.saveAllData();
-				showSuccessOptionPane("Аварію та клієнта видалено успішно!");
-				clearDeleteFields(FIELD_TYPES.ACCIDENT_FIELD);
-				populateAccidentComboBoxes();
-				populateClientComboBoxes();
-			} else {
-				showErrorOptionPane("Не вдалося знайти пов'язані записи");
-			}
-		} catch (SQLException | IllegalArgumentException ex) {
-			showErrorOptionPane("Помилка видалення аварії та клієнта: " + ex.getMessage());
 		}
 	}
 
@@ -1027,10 +1178,12 @@ public class UserInterface {
 			validateField(addAccidentCostField, "Вартість");
 			validateField(addAccidentStatusField, "Стан");
 			validateField(addAccidentBrigadeField, "Номер бригади");
-			validateField(accidentIdField, "ID аварії");
+			validateField(accidentClientPhoneNumberField, "Номер телефону клієнта");
+			validateField(accidentIndexField, "Індекс аварії");
 
-			String accidentId = (String) accidentIdField.getSelectedItem();
-			Accident accidentToUpdate = main.getAccidentById(accidentId);
+			String accidentClientPhoneNumber = (String) accidentClientPhoneNumberField.getSelectedItem();
+			String accidentId = (String) accidentIndexField.getSelectedItem();
+			Accident accidentToUpdate = main.getAccidentByPhoneNumAccIndex(accidentClientPhoneNumber, Integer.parseInt(accidentId));
 			if (accidentToUpdate != null) {
 				Date date = parseDate(addAccidentDateField.getText());
 				String address = addAccidentAddressField.getText();
@@ -1045,20 +1198,14 @@ public class UserInterface {
 				accidentToUpdate.setCost(cost);
 				accidentToUpdate.setStatus(status);
 				accidentToUpdate.setBrigade(new Brigade(brigadeNumber));
-
-				Client clientToUpdate = main.getClientByAccidentId(accidentId);
-				if (clientToUpdate != null) {
-					clientToUpdate.setAddress(address);
-					clientToUpdate.setName(addClientNameField.getText());
-					clientToUpdate.setPhoneNumber(addClientPhoneField.getText());
-					clientToUpdate.setDepartmentNumber(Integer.parseInt((String) addClientDepartmentField.getSelectedItem()));
-				}
+				accidentToUpdate.setClientPhoneNumber(accidentClientPhoneNumber);
 
 				main.saveAllData();
 				showSuccessOptionPane("Аварію з ID " + accidentId + " оновлено успішно!");
 				clearAddFields(FIELD_TYPES.ACCIDENT_FIELD);
 				populateAccidentComboBoxes();
 				populateClientComboBoxes();
+				populateClientAccidentIndexComboBox(accidentClientPhoneNumber);
 			} else {
 				showErrorOptionPane("Аварію з ID " + accidentId + " не знайдено.");
 			}
@@ -1068,14 +1215,14 @@ public class UserInterface {
 	}
 
 	private void listAccidents() {
-		StringBuilder sb = new StringBuilder("Список аварій:\n");
+		StringBuilder sb = new StringBuilder("Список аварій\n");
 
-		Map<String, Accident> uniqueAccidents = new LinkedHashMap<>();
+		Map<Integer, Accident> uniqueAccidents = new LinkedHashMap<>();
 		for (Accident accident : main.getAccidents()) {
-			uniqueAccidents.put(accident.getAccidentId(), accident);
+			uniqueAccidents.put(accident.getIndex(), accident);
 		}
 
-		int idWidth = "ID аварії".length();
+		int phoneNumberWidth = "Номер телефону".length();
 		int dateWidth = "Дата".length();
 		int addressWidth = "Адреса".length();
 		int typeWidth = "Тип аварії".length();
@@ -1084,7 +1231,7 @@ public class UserInterface {
 		int brigadeWidth = "Номер бригади".length();
 
 		for (Accident accident : uniqueAccidents.values()) {
-			idWidth = Math.max(idWidth, accident.getAccidentId().length());
+			phoneNumberWidth = Math.max(phoneNumberWidth, (accident.getClientPhoneNumber() + " (" + accident.getAccidentIndex() + ")").length());
 			dateWidth = Math.max(dateWidth, main.getDateFormat().format(accident.getDate()).length());
 			addressWidth = Math.max(addressWidth, accident.getAddress().length());
 			typeWidth = Math.max(typeWidth, accident.getType().length());
@@ -1093,209 +1240,22 @@ public class UserInterface {
 			brigadeWidth = Math.max(brigadeWidth, String.valueOf(accident.getBrigade().getNumber()).length());
 		}
 
-		String format = String.format("%%-%ds %%-%ds %%-%ds %%-%ds %%-%ds %%-%ds %%-%ds\n",
-				idWidth, dateWidth, addressWidth, typeWidth, costWidth, statusWidth, brigadeWidth);
+		String format = String.format("%%-%ds  %%-%ds  %%-%ds  %%-%ds  %%-%ds  %%-%ds  %%-%ds\n",
+				phoneNumberWidth, dateWidth, addressWidth, typeWidth, costWidth, statusWidth, brigadeWidth);
 
-		sb.append(String.format(format, "ID аварії", "Дата", "Адреса", "Тип аварії", "Вартість", "Стан", "Номер бригади"));
-		sb.append(String.format(format, "-".repeat(idWidth), "-".repeat(dateWidth), "-".repeat(addressWidth),
+		sb.append(String.format(format, "Номер телефону", "Дата", "Адреса", "Тип аварії", "Вартість", "Стан", "Номер бригади"));
+		sb.append(String.format(format, "-".repeat(phoneNumberWidth), "-".repeat(dateWidth), "-".repeat(addressWidth),
 				"-".repeat(typeWidth), "-".repeat(costWidth), "-".repeat(statusWidth), "-".repeat(brigadeWidth)));
 
 		for (Accident accident : uniqueAccidents.values()) {
 			sb.append(String.format(format,
-					accident.getAccidentId(),
+					accident.getClientPhoneNumber() + " (" + accident.getAccidentIndex() + ")",
 					main.getDateFormat().format(accident.getDate()),
 					accident.getAddress(),
 					accident.getType(),
 					accident.getCost() + " грн",
 					accident.getStatus(),
 					accident.getBrigade().getNumber()
-			));
-		}
-		resultArea.setText(sb.toString());
-	}
-
-	private void countClients() {
-		resultArea.setText("Кількість клієнтів: " + main.getClients().size());
-	}
-
-	private void addClient() {
-		try {
-			validateField(addClientNameField, "Ім'я та прізвище");
-			validateField(addClientAddressField, "Адреса");
-			validateField(addClientPhoneField, "Номер телефону");
-			validateField(addClientDepartmentField, "Номер відділення");
-
-			String name = addClientNameField.getText();
-			String address = addClientAddressField.getText();
-			String phoneNumber = addClientPhoneField.getText();
-			int departmentNumber = Integer.parseInt((String) addClientDepartmentField.getSelectedItem());
-
-			int nextClientIndex = main.getNextClientIndex();
-			int newAccidentIndex = main.getNextAccidentIndex();
-			String accidentId = newAccidentIndex + "-" + Main.generateRandomString(8);
-
-			Date currentDate = new Date();
-			String accidentType = "Новий";
-			double accidentCost = 0.0;
-			String accidentStatus = "Новий";
-			int brigadeNumber = 1;
-
-			Brigade brigade = new Brigade(brigadeNumber);
-			Accident accident = new Accident(newAccidentIndex, accidentId, address,
-					accidentType, accidentCost, currentDate,
-					brigade, accidentStatus);
-			main.getAccidents().add(accident);
-
-			Client client = new Client(nextClientIndex, accidentId, name, address, phoneNumber, departmentNumber);
-			main.getClients().add(client);
-
-			accident.setClient(client);
-
-			main.saveAllData();
-			showSuccessOptionPane("Клієнта додано успішно!");
-			clearAddFields(FIELD_TYPES.CLIENT_FIELD);
-			populateClientComboBoxes();
-			populateAccidentComboBoxes();
-		} catch (IllegalArgumentException ex) {
-			showErrorOptionPane("Помилка додавання клієнта: " + ex.getMessage());
-		}
-	}
-
-	private void deleteClient() {
-		try {
-			validateField(clientAccidentIdField, "ID аварії");
-			String accidentId = (String) clientAccidentIdField.getSelectedItem();
-			Client clientToRemove = main.getClientByAccidentId(accidentId);
-			if (clientToRemove != null) {
-				Accident associatedAccident = main.getAccidentById(accidentId);
-				if (associatedAccident != null) {
-					associatedAccident.setClient(null);
-				}
-
-				main.dbManager.deleteClient(clientToRemove.getIndex());
-				main.getClients().remove(clientToRemove);
-
-				main.saveAllData();
-				showSuccessOptionPane("Клієнта з ID аварії " + accidentId + " видалено успішно!");
-				clearDeleteFields(FIELD_TYPES.CLIENT_FIELD);
-				populateClientComboBoxes();
-				populateAccidentComboBoxes();
-			} else {
-				showErrorOptionPane("Клієнта з ID аварії " + accidentId + " не знайдено.");
-			}
-		} catch (SQLException | IllegalArgumentException ex) {
-			showErrorOptionPane("Помилка видалення клієнта: " + ex.getMessage());
-		}
-	}
-
-	private void deleteClientAndAccident() {
-		try {
-			validateField(clientAccidentIdField, "ID аварії");
-			String accidentId = (String) clientAccidentIdField.getSelectedItem();
-			Client clientToRemove = main.getClientByAccidentId(accidentId);
-			Accident accidentToRemove = main.getAccidentById(accidentId);
-
-			if (clientToRemove != null && accidentToRemove != null) {
-				main.dbManager.deleteClient(clientToRemove.getIndex());
-				main.getClients().remove(clientToRemove);
-				main.getAccidents().remove(accidentToRemove);
-
-				main.saveAllData();
-				showSuccessOptionPane("Клієнта та аварію видалено успішно!");
-				clearDeleteFields(FIELD_TYPES.CLIENT_FIELD);
-				populateClientComboBoxes();
-				populateAccidentComboBoxes();
-			} else {
-				showErrorOptionPane("Не вдалося знайти пов'язані записи");
-			}
-		} catch (SQLException | IllegalArgumentException ex) {
-			showErrorOptionPane("Помилка видалення: " + ex.getMessage());
-		}
-	}
-
-	private void updateClient() {
-		try {
-			validateField(addClientNameField, "Ім'я та прізвище");
-			validateField(addClientAddressField, "Адреса");
-			validateField(addClientPhoneField, "Номер телефону");
-			validateField(addClientDepartmentField, "Номер відділення");
-			validateField(clientAccidentIdField, "ID аварії");
-
-			String accidentId = (String) clientAccidentIdField.getSelectedItem();
-			Client clientToUpdate = main.getClientByAccidentId(accidentId);
-			Accident accident = main.getAccidentById(accidentId);
-
-			if (accident == null) {
-				showErrorOptionPane("Аварію з ID " + accidentId + " не знайдено.");
-				return;
-			}
-
-			if (clientToUpdate == null) {
-				int nextClientIndex = main.getNextClientIndex();
-				clientToUpdate = new Client(
-						nextClientIndex,
-						accidentId,
-						addClientNameField.getText(),
-						addClientAddressField.getText(),
-						addClientPhoneField.getText(),
-						Integer.parseInt((String) addClientDepartmentField.getSelectedItem())
-				);
-				main.getClients().add(clientToUpdate);
-				accident.setClient(clientToUpdate);
-			} else {
-				clientToUpdate.setName(addClientNameField.getText());
-				clientToUpdate.setAddress(addClientAddressField.getText());
-				clientToUpdate.setPhoneNumber(addClientPhoneField.getText());
-				clientToUpdate.setDepartmentNumber(Integer.parseInt((String) addClientDepartmentField.getSelectedItem()));
-			}
-			accident.setAddress(addClientAddressField.getText());
-
-			main.saveAllData();
-			showSuccessOptionPane("Клієнта з ID аварії " + accidentId + " оновлено успішно!");
-			clearAddFields(FIELD_TYPES.CLIENT_FIELD);
-			populateClientComboBoxes();
-			populateAccidentComboBoxes();
-		} catch (IllegalArgumentException ex) {
-			showErrorOptionPane("Помилка оновлення клієнта: " + ex.getMessage());
-		}
-	}
-
-	private void listClients() {
-		StringBuilder sb = new StringBuilder("Список клієнтів:\n");
-
-		Map<String, Client> uniqueClients = new LinkedHashMap<>();
-		for (Client client : main.getClients()) {
-			uniqueClients.put(client.getAccidentId(), client);
-		}
-
-		int accidentIdWidth = "ID аварії".length();
-		int nameWidth = "Ім'я та прізвище".length();
-		int addressWidth = "Адреса".length();
-		int phoneWidth = "Номер телефону".length();
-		int departmentWidth = "Номер відділення".length();
-
-		for (Client client : uniqueClients.values()) {
-			accidentIdWidth = Math.max(accidentIdWidth, client.getAccidentId().length());
-			nameWidth = Math.max(nameWidth, client.getName().length());
-			addressWidth = Math.max(addressWidth, client.getAddress().length());
-			phoneWidth = Math.max(phoneWidth, client.getPhoneNumber().length());
-			departmentWidth = Math.max(departmentWidth, String.valueOf(client.getDepartmentNumber()).length());
-		}
-
-		String format = String.format("%%-%ds %%-%ds %%-%ds %%-%ds %%-%ds\n",
-				accidentIdWidth, nameWidth, addressWidth, phoneWidth, departmentWidth);
-
-		sb.append(String.format(format, "ID аварії", "Ім'я та прізвище", "Адреса", "Номер телефону", "Номер відділення"));
-		sb.append(String.format(format, "-".repeat(accidentIdWidth), "-".repeat(nameWidth),
-				"-".repeat(addressWidth), "-".repeat(phoneWidth), "-".repeat(departmentWidth)));
-
-		for (Client client : uniqueClients.values()) {
-			sb.append(String.format(format,
-					client.getAccidentId(),
-					client.getName(),
-					client.getAddress(),
-					client.getPhoneNumber(),
-					client.getDepartmentNumber()
 			));
 		}
 		resultArea.setText(sb.toString());
@@ -1350,8 +1310,8 @@ public class UserInterface {
 	private void validateNameField(JTextField field, String fieldName) {
 		String text = field.getText().trim();
 		for (char c : text.toCharArray()) {
-			if (!Character.isLetter(c) && !Character.isSpaceChar(c)) {
-				throw new IllegalArgumentException("Поле " + fieldName + " може містити тільки літери та пробіли.");
+			if (!Character.isLetter(c) && !Character.isSpaceChar(c) && c != '\'' && c != '-') {
+				throw new IllegalArgumentException("Поле " + fieldName + " може містити тільки літери, пробіли, апострофи та дефіси.");
 			}
 		}
 	}
@@ -1388,71 +1348,79 @@ public class UserInterface {
 	}
 
 	public void populateMasterComboBoxes() {
-		String[] masterIndices = main.getMasters().stream()
-				.map(master -> String.valueOf(master.getIndex()))
+		String[] masterNames = main.getMasters().stream()
+				.map(Master::getName)
+				.sorted()
 				.toArray(String[]::new);
 
-		masterIndexField.setModel(new DefaultComboBoxModel<>(masterIndices));
+		masterListNameField.setModel(new DefaultComboBoxModel<>(masterNames));
 
-		String[] brigadeNumbers = main.getBrigadeAndDepartmentNumbers().toArray(new String[0]);
+		String[] brigadeNumbers = Main.getBrigadeAndDepartmentNumbers().toArray(new String[0]);
 		addMasterBrigadeField.setModel(new DefaultComboBoxModel<>(brigadeNumbers));
 
-		String[] departmentNumbers = main.getBrigadeAndDepartmentNumbers().toArray(new String[0]);
+		String[] departmentNumbers = Main.getBrigadeAndDepartmentNumbers().toArray(new String[0]);
 		addMasterDepartmentField.setModel(new DefaultComboBoxModel<>(departmentNumbers));
 	}
 
 	public void populateAccidentComboBoxes() {
 		Set<String> uniqueIds = new HashSet<>();
-		List<String> accidentIds = new ArrayList<>();
 
 		for (Accident accident : main.getAccidents()) {
-			String id = accident.getAccidentId();
-			if (uniqueIds.add(id)) {
-				accidentIds.add(id);
-			}
+			String id = String.valueOf(accident.getIndex());
+			uniqueIds.add(id);
 		}
 
-		accidentIds.sort((id1, id2) -> {
-			int num1 = Integer.parseInt(id1.split("-")[0]);
-			int num2 = Integer.parseInt(id2.split("-")[0]);
-			return Integer.compare(num1, num2);
-		});
+		List<String> sortedIds = new ArrayList<>(uniqueIds);
+		sortedIds.sort(Comparator.comparing(id -> id));
 
-		accidentIdField.setModel(new DefaultComboBoxModel<>(accidentIds.toArray(new String[0])));
+		accidentIndexField.setModel(new DefaultComboBoxModel<>(sortedIds.toArray(new String[0])));
 
 		String[] brigadeNumbers = main.getUsedBrigadeNumbers().toArray(new String[0]);
-		String[] accidentTypes = main.getAccidentTypes().toArray(new String[0]);
+		String[] accidentTypes = Main.getAccidentTypes().toArray(new String[0]);
 
 		addAccidentTypeField.setModel(new DefaultComboBoxModel<>(accidentTypes));
 		addAccidentBrigadeField.setModel(new DefaultComboBoxModel<>(brigadeNumbers));
+
+		populateAccidentClientPhoneNumberComboBox();
 	}
 
 	public void populateClientComboBoxes() {
 		Set<String> uniqueIds = new HashSet<>();
 
-		for (Accident accident : main.getAccidents()) {
-			uniqueIds.add(accident.getAccidentId());
-		}
-
 		for (Client client : main.getClients()) {
-			uniqueIds.add(client.getAccidentId());
+			uniqueIds.add(client.getName());
 		}
 
 		List<String> sortedIds = new ArrayList<>(uniqueIds);
-		sortedIds.sort((id1, id2) -> {
-			int num1 = Integer.parseInt(id1.split("-")[0]);
-			int num2 = Integer.parseInt(id2.split("-")[0]);
-			return Integer.compare(num1, num2);
-		});
+		sortedIds.sort(Comparator.comparing(name -> name));
 
-		clientAccidentIdField.setModel(new DefaultComboBoxModel<>(sortedIds.toArray(new String[0])));
+		clientListNameField.setModel(new DefaultComboBoxModel<>(sortedIds.toArray(new String[0])));
 
 		String[] departmentNumbers = main.getUsedDepartmentNumbers().toArray(new String[0]);
 		addClientDepartmentField.setModel(new DefaultComboBoxModel<>(departmentNumbers));
 	}
 
-	public void loadMasterData(int masterIndex) {
-		Master master = main.getMasterByIndex(masterIndex);
+	public void populateAccidentClientPhoneNumberComboBox() {
+		Set<String> phoneNumbers = new HashSet<>();
+		for (Client client : main.getClients()) {
+			phoneNumbers.add(client.getPhoneNumber());
+		}
+
+		List<String> sortedNumbers = new ArrayList<>(phoneNumbers);
+		Collections.sort(sortedNumbers);
+		accidentClientPhoneNumberField.setModel(new DefaultComboBoxModel<>(sortedNumbers.toArray(new String[0])));
+	}
+
+	private void populateClientAccidentIndexComboBox(String phoneNumber) {
+		List<Integer> indices = main.getAccidentIndicesForClient(phoneNumber);
+		String[] indexArray = indices.stream()
+				.map(String::valueOf)
+				.toArray(String[]::new);
+		accidentIndexField.setModel(new DefaultComboBoxModel<>(indexArray));
+	}
+
+	public void loadMasterData(String masterName) {
+		Master master = main.getMasterByName(masterName);
 		if (master != null) {
 			addMasterNameField.setText(master.getName());
 			addMasterAddressField.setText(master.getAddress());
@@ -1466,30 +1434,21 @@ public class UserInterface {
 		}
 	}
 
-	public void loadClientData(String accidentId) {
-		Client client = main.getClientByAccidentId(accidentId);
-
-		// Always get the address from the accident first
-		Accident accident = main.getAccidentById(accidentId);
-		String address = (accident != null) ? accident.getAddress() : "";
+	public void loadClientData(String clientName) {
+		Client client = main.getClientByName(clientName);
 
 		if (client != null) {
-			// Use accident address if available, otherwise use client address
-			String displayAddress = !address.isEmpty() ? address : client.getAddress();
-
 			addClientNameField.setText(client.getName());
-			addClientAddressField.setText(displayAddress);
+			addClientAddressField.setText(client.getAddress());
 			addClientPhoneField.setText(client.getPhoneNumber());
 			addClientDepartmentField.setSelectedItem(String.valueOf(client.getDepartmentNumber()));
 		} else {
-			// No client exists, but accident might
 			clearAddFields(FIELD_TYPES.CLIENT_FIELD);
-			addClientAddressField.setText(address);
 		}
 	}
 
-	public void loadAccidentData(String accidentId) {
-		Accident accident = main.getAccidentById(accidentId);
+	public void loadAccidentData(String clientPhoneNumber, int accidentIndex) {
+		Accident accident = main.getAccidentByPhoneNumAccIndex(clientPhoneNumber, accidentIndex);
 		if (accident != null) {
 			addAccidentDateField.setText(main.getDateFormat().format(accident.getDate()));
 			addAccidentAddressField.setText(accident.getAddress());

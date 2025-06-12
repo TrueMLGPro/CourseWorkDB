@@ -22,7 +22,7 @@ class MastersTabUITest extends BaseUITest {
 
 		String result = window.textBox("resultArea").text();
 		assertTrue(result.contains("Валерій Іваненко"));
-		assertTrue(result.contains("0987654321"));
+		assertTrue(result.contains("0987654320"));
 		assertTrue(result.contains("вул. Молодіжна 12"));
 	}
 
@@ -36,7 +36,7 @@ class MastersTabUITest extends BaseUITest {
 		window.textBox("addMasterAddressField").enterText("вул. Майстерська 7");
 		window.textBox("addMasterPhoneField").enterText("0678889900");
 		window.textBox("addMasterExperienceField").enterText("5");
-		window.comboBox("addMasterStatusField").selectItem("Призначений");
+		window.comboBox("addMasterStatusField").selectItem("Зайнятий");
 		window.comboBox("addMasterBrigadeField").selectItem("2");
 		window.comboBox("addMasterDepartmentField").selectItem("3");
 
@@ -46,7 +46,7 @@ class MastersTabUITest extends BaseUITest {
 		window.button("listMastersButton").click();
 		String result = window.textBox("resultArea").text();
 		assertTrue(result.contains("Новий Майстер"));
-		assertTrue(result.contains("Призначений"));
+		assertTrue(result.contains("Зайнятий"));
 	}
 
 	@GUITest
@@ -55,11 +55,12 @@ class MastersTabUITest extends BaseUITest {
 		prepareTestData();
 		window.tabbedPane().selectTab("Майстри");
 
-		JComboBoxFixture masterCombo = window.comboBox("masterIndexField");
+		JComboBoxFixture masterCombo = window.comboBox("masterListNameField");
 		masterCombo.selectItem(0);
 
-		String masterIndex = (String) masterCombo.target().getSelectedItem();
-		ui.loadMasterData(Integer.parseInt(masterIndex));
+		String masterName = (String) masterCombo.target().getSelectedItem();
+		ui.loadMasterData(masterName);
+
 		window.comboBox("addMasterStatusField").selectItem("Зайнятий");
 		window.button("updateMasterButton").click();
 
@@ -75,16 +76,16 @@ class MastersTabUITest extends BaseUITest {
 		prepareTestData();
 		window.tabbedPane().selectTab("Майстри");
 
-		int initialCount = getComboboxItemsCount("masterIndexField");
-		JComboBoxFixture masterCombo = window.comboBox("masterIndexField");
+		int initialCount = getComboboxItemsCount("masterListNameField");
+		JComboBoxFixture masterCombo = window.comboBox("masterListNameField");
 		masterCombo.selectItem(0);
 
-		String masterIndex = (String) masterCombo.target().getSelectedItem();
-		ui.loadMasterData(Integer.parseInt(masterIndex));
+		String masterName = (String) masterCombo.target().getSelectedItem();
+		ui.loadMasterData(masterName);
 		window.button("deleteMasterButton").click();
 
 		window.optionPane().requireInformationMessage().okButton().click();
-		assertEquals(initialCount - 1, getComboboxItemsCount("masterIndexField"));
+		assertEquals(initialCount - 1, getComboboxItemsCount("masterListNameField"));
 	}
 
 	@GUITest

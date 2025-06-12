@@ -9,7 +9,20 @@
   <component name="ChangeListManager">
     <list default="true" id="95a69f16-a790-40cd-8ee2-a8de1e3cf5c5" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/vitaliyrev/courseworkdb/app/Accident.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/vitaliyrev/courseworkdb/app/Accident.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/vitaliyrev/courseworkdb/app/Client.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/vitaliyrev/courseworkdb/app/Client.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/vitaliyrev/courseworkdb/app/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/vitaliyrev/courseworkdb/app/Main.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/vitaliyrev/courseworkdb/app/UserInterface.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/vitaliyrev/courseworkdb/app/UserInterface.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/vitaliyrev/courseworkdb/app/db/DatabaseManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/vitaliyrev/courseworkdb/app/db/DatabaseManager.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/AccidentTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/AccidentTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/ClientTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/ClientTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/MainTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/MainTest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/db/DatabaseManagerTestBase.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/db/DatabaseManagerTestBase.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/ui/AccidentsTabUITest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/ui/AccidentsTabUITest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/ui/ClientsTabUITest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/ui/ClientsTabUITest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/ui/ConnectionStatusUITest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/ui/ConnectionStatusUITest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/ui/MastersTabUITest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/ui/MastersTabUITest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/ui/abc/BaseUITest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/ui/abc/BaseUITest.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -113,7 +126,7 @@
     "Gradle.ClientsTabUITest.executor": "Run",
     "Gradle.ClientsTabUITest.testDeleteClient.executor": "Run",
     "Gradle.ClientsTabUITest.testListClients.executor": "Run",
-    "Gradle.ConnectionStatusUITest.testReconnectFlow.executor": "Run",
+    "Gradle.ConnectionStatusUITest.testReconnectFlow.executor": "Debug",
     "Gradle.CourseWorkDB [:com.vitaliyrev.courseworkdb.app.Main.main()].executor": "Run",
     "Gradle.CourseWorkDB [assemble].executor": "Run",
     "Gradle.CourseWorkDB [build].executor": "Run",
@@ -131,6 +144,10 @@
     "Gradle.Download Sources.executor": "Run",
     "Gradle.MainTest.shouldCalculateMasterSalaryCorrectly.executor": "Debug",
     "Gradle.MainTest.shouldCalculateSalaryForDateRange.executor": "Debug",
+    "Gradle.MainTest.shouldSaveAllDataWithMultipleEntries.executor": "Run",
+    "Gradle.MainTest.testFindClientsByNamePattern.executor": "Run",
+    "Gradle.MainTest.testGetInactiveBrigadesLeftJoin.executor": "Run",
+    "Gradle.MainTest.testGetTopBrigadePerAccidentType.executor": "Run",
     "Gradle.MastersTabUITest.executor": "Run",
     "Gradle.MastersTabUITest.testAddMaster.executor": "Run",
     "Gradle.MastersTabUITest.testDeleteMaster.executor": "Run",
@@ -152,7 +169,7 @@
     "project.structure.proportion": "0.15",
     "project.structure.side.proportion": "0.2",
     "run.code.analysis.last.selected.profile": "pProject Default",
-    "settings.editor.selected.configurable": "preferences.pluginManager"
+    "settings.editor.selected.configurable": "preferences.lookFeel"
   }
 }]]></component>
   <component name="RecentsManager">
@@ -162,7 +179,7 @@
     </key>
   </component>
   <component name="RunManager" selected="Gradle.CourseWorkDB [run]">
-    <configuration name="ClientsTabUITest.testDeleteClient" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
+    <configuration name="AccidentsTabUITest" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
       <ExternalSystemSettings>
         <option name="executionName" />
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
@@ -175,7 +192,55 @@
           <list>
             <option value=":test" />
             <option value="--tests" />
-            <option value="&quot;com.vitaliyrev.courseworkdb.app.ui.ClientsTabUITest.testDeleteClient&quot;" />
+            <option value="&quot;com.vitaliyrev.courseworkdb.app.ui.AccidentsTabUITest&quot;" />
+          </list>
+        </option>
+        <option name="vmOptions" />
+      </ExternalSystemSettings>
+      <ExternalSystemDebugServerProcess>false</ExternalSystemDebugServerProcess>
+      <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
+      <DebugAllEnabled>false</DebugAllEnabled>
+      <RunAsTest>true</RunAsTest>
+      <method v="2" />
+    </configuration>
+    <configuration name="AccidentsTabUITest.testAddNewAccident" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
+      <ExternalSystemSettings>
+        <option name="executionName" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="externalSystemIdString" value="GRADLE" />
+        <option name="scriptParameters" value="" />
+        <option name="taskDescriptions">
+          <list />
+        </option>
+        <option name="taskNames">
+          <list>
+            <option value=":test" />
+            <option value="--tests" />
+            <option value="&quot;com.vitaliyrev.courseworkdb.app.ui.AccidentsTabUITest.testAddNewAccident&quot;" />
+          </list>
+        </option>
+        <option name="vmOptions" />
+      </ExternalSystemSettings>
+      <ExternalSystemDebugServerProcess>false</ExternalSystemDebugServerProcess>
+      <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
+      <DebugAllEnabled>false</DebugAllEnabled>
+      <RunAsTest>true</RunAsTest>
+      <method v="2" />
+    </configuration>
+    <configuration name="ConnectionStatusUITest.testReconnectFlow" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
+      <ExternalSystemSettings>
+        <option name="executionName" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="externalSystemIdString" value="GRADLE" />
+        <option name="scriptParameters" value="" />
+        <option name="taskDescriptions">
+          <list />
+        </option>
+        <option name="taskNames">
+          <list>
+            <option value=":test" />
+            <option value="--tests" />
+            <option value="&quot;com.vitaliyrev.courseworkdb.app.ui.ConnectionStatusUITest.testReconnectFlow&quot;" />
           </list>
         </option>
         <option name="vmOptions" />
@@ -208,76 +273,26 @@
       <RunAsTest>false</RunAsTest>
       <method v="2" />
     </configuration>
-    <configuration name="MastersTabUITest" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
+    <configuration name="CourseWorkDB [test]" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
       <ExternalSystemSettings>
         <option name="executionName" />
         <option name="externalProjectPath" value="$PROJECT_DIR$" />
         <option name="externalSystemIdString" value="GRADLE" />
-        <option name="scriptParameters" value="" />
+        <option name="scriptParameters" />
         <option name="taskDescriptions">
           <list />
         </option>
         <option name="taskNames">
           <list>
-            <option value=":test" />
-            <option value="--tests" />
-            <option value="&quot;com.vitaliyrev.courseworkdb.app.ui.MastersTabUITest&quot;" />
+            <option value="test" />
           </list>
         </option>
         <option name="vmOptions" />
       </ExternalSystemSettings>
-      <ExternalSystemDebugServerProcess>false</ExternalSystemDebugServerProcess>
+      <ExternalSystemDebugServerProcess>true</ExternalSystemDebugServerProcess>
       <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
       <DebugAllEnabled>false</DebugAllEnabled>
-      <RunAsTest>true</RunAsTest>
-      <method v="2" />
-    </configuration>
-    <configuration name="MastersTabUITest.testDeleteMaster" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
-      <ExternalSystemSettings>
-        <option name="executionName" />
-        <option name="externalProjectPath" value="$PROJECT_DIR$" />
-        <option name="externalSystemIdString" value="GRADLE" />
-        <option name="scriptParameters" value="" />
-        <option name="taskDescriptions">
-          <list />
-        </option>
-        <option name="taskNames">
-          <list>
-            <option value=":test" />
-            <option value="--tests" />
-            <option value="&quot;com.vitaliyrev.courseworkdb.app.ui.MastersTabUITest.testDeleteMaster&quot;" />
-          </list>
-        </option>
-        <option name="vmOptions" />
-      </ExternalSystemSettings>
-      <ExternalSystemDebugServerProcess>false</ExternalSystemDebugServerProcess>
-      <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
-      <DebugAllEnabled>false</DebugAllEnabled>
-      <RunAsTest>true</RunAsTest>
-      <method v="2" />
-    </configuration>
-    <configuration name="Tests in 'com.vitaliyrev.courseworkdb.app.ui'" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
-      <ExternalSystemSettings>
-        <option name="executionName" />
-        <option name="externalProjectPath" value="$PROJECT_DIR$" />
-        <option name="externalSystemIdString" value="GRADLE" />
-        <option name="scriptParameters" value="" />
-        <option name="taskDescriptions">
-          <list />
-        </option>
-        <option name="taskNames">
-          <list>
-            <option value=":test" />
-            <option value="--tests" />
-            <option value="&quot;com.vitaliyrev.courseworkdb.app.ui.*&quot;" />
-          </list>
-        </option>
-        <option name="vmOptions" />
-      </ExternalSystemSettings>
-      <ExternalSystemDebugServerProcess>false</ExternalSystemDebugServerProcess>
-      <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
-      <DebugAllEnabled>false</DebugAllEnabled>
-      <RunAsTest>true</RunAsTest>
+      <RunAsTest>false</RunAsTest>
       <method v="2" />
     </configuration>
     <configuration default="true" type="JetRunConfigurationType">
@@ -294,19 +309,19 @@
       </method>
     </configuration>
     <list>
-      <item itemvalue="Gradle.ClientsTabUITest.testDeleteClient" />
-      <item itemvalue="Gradle.MastersTabUITest" />
-      <item itemvalue="Gradle.MastersTabUITest.testDeleteMaster" />
-      <item itemvalue="Gradle.Tests in 'com.vitaliyrev.courseworkdb.app.ui'" />
+      <item itemvalue="Gradle.AccidentsTabUITest" />
+      <item itemvalue="Gradle.AccidentsTabUITest.testAddNewAccident" />
+      <item itemvalue="Gradle.ConnectionStatusUITest.testReconnectFlow" />
+      <item itemvalue="Gradle.CourseWorkDB [test]" />
       <item itemvalue="Gradle.CourseWorkDB [run]" />
     </list>
     <recent_temporary>
       <list>
         <item itemvalue="Gradle.CourseWorkDB [run]" />
-        <item itemvalue="Gradle.Tests in 'com.vitaliyrev.courseworkdb.app.ui'" />
-        <item itemvalue="Gradle.ClientsTabUITest.testDeleteClient" />
-        <item itemvalue="Gradle.MastersTabUITest.testDeleteMaster" />
-        <item itemvalue="Gradle.MastersTabUITest" />
+        <item itemvalue="Gradle.CourseWorkDB [test]" />
+        <item itemvalue="Gradle.AccidentsTabUITest" />
+        <item itemvalue="Gradle.ConnectionStatusUITest.testReconnectFlow" />
+        <item itemvalue="Gradle.AccidentsTabUITest.testAddNewAccident" />
       </list>
     </recent_temporary>
   </component>

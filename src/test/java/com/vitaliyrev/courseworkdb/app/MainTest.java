@@ -36,9 +36,9 @@ class MainTest extends DatabaseManagerTestBase {
 
 	@AfterEach
 	void tearDown() throws SQLException {
-		if (testConnection != null && !testConnection.isClosed()) {
+		if (testConnection != null &&!testConnection.isClosed()) {
 			try (Statement stmt = testConnection.createStatement()) {
-				stmt.execute("TRUNCATE TABLE clients, accidents, masters, brigades CASCADE");
+				stmt.execute("TRUNCATE TABLE clients, accidents, masters, existing_brigades CASCADE");
 			}
 		}
 		dbManager.close();
@@ -49,18 +49,18 @@ class MainTest extends DatabaseManagerTestBase {
 	}
 
 	private Master createTestMaster(int id, Brigade brigade) {
-		return new Master(id, "Мастер" + id, "Адреса" + id, "098765432" + id,
+		return new Master(id, "Майстер" + id, "Адреса" + id, "098765432" + id,
 				5, "Зайнятий", brigade, 1);
 	}
 
-	private Client createTestClient(int id, String accidentId, int dept) {
-		return new Client(id, accidentId, "Клієнт" + id,
+	private Client createTestClient(int id, int dept) {
+		return new Client(id, "Клієнт" + id,
 				"АдресаКлієнта" + id, "098765432" + id, dept);
 	}
 
-	private Accident createTestAccident(int id, String accidentId, Brigade brigade, Date date) {
-		return new Accident(id, accidentId, "АдресаАварії" + id,
-				"Тип" + id, id * 100.0, date, brigade, "У процесі");
+	private Accident createTestAccident(int id, Brigade brigade, Date date) {
+		return new Accident(id, "АдресаАварії" + id,
+				"Крах крана", id * 100.0, date, brigade, "У процесі", "098765432" + id, id);
 	}
 
 	@Test
@@ -79,13 +79,13 @@ class MainTest extends DatabaseManagerTestBase {
 		Date accidentDate2 = new Date(now - 4000);
 
 		List<Accident> accidents = List.of(
-				createTestAccident(1, "1-ACC", brigade1, accidentDate1),
-				createTestAccident(2, "2-ACC", brigade2, accidentDate2)
+				createTestAccident(1, brigade1, accidentDate1),
+				createTestAccident(2, brigade2, accidentDate2)
 		);
 
 		List<Client> clients = List.of(
-				createTestClient(1, "1-ACC", 5),
-				createTestClient(2, "2-ACC", 5)
+				createTestClient(1, 5),
+				createTestClient(2, 5)
 		);
 
 		main.setMasters(masters);
@@ -94,13 +94,13 @@ class MainTest extends DatabaseManagerTestBase {
 
 		main.saveAllData();
 
-		verifyTableCount("brigades", 2);
+		verifyTableCount("existing_brigades", 2);
 		verifyTableCount("masters", 3);
 		verifyTableCount("accidents", 2);
 		verifyTableCount("clients", 2);
 
 		try (Statement stmt = testConnection.createStatement();
-		     ResultSet rs = stmt.executeQuery("SELECT number FROM brigades ORDER BY number")) {
+		     ResultSet rs = stmt.executeQuery("SELECT number FROM existing_brigades ORDER BY number")) {
 			assertTrue(rs.next());
 			assertEquals(1, rs.getInt("number"));
 			assertTrue(rs.next());
@@ -109,14 +109,12 @@ class MainTest extends DatabaseManagerTestBase {
 		}
 
 		try (PreparedStatement ps = testConnection.prepareStatement(
-				"SELECT c.id, a.accident_id FROM clients c JOIN accidents a ON c.accident_id = a.accident_id")) {
+				"SELECT c.id, a.id AS accident_id_from_accidents " +
+						"FROM clients c JOIN accidents a ON c.phone_number = a.client_phone_number")) {
 			ResultSet rs = ps.executeQuery();
 			int count = 0;
 			while (rs.next()) {
 				count++;
-				int clientId = rs.getInt("id");
-				String accidentId = rs.getString("accident_id");
-				assertEquals(clientId + "-ACC", accidentId);
 			}
 			assertEquals(2, count);
 		}
@@ -130,7 +128,7 @@ class MainTest extends DatabaseManagerTestBase {
 
 		main.saveAllData();
 
-		verifyTableCount("brigades", 0);
+		verifyTableCount("existing_brigades", 0);
 		verifyTableCount("masters", 0);
 		verifyTableCount("accidents", 0);
 		verifyTableCount("clients", 0);
@@ -152,9 +150,15 @@ class MainTest extends DatabaseManagerTestBase {
 		Date accidentDate3 = new Date(now.getTime() - 3000);
 
 		List<Accident> accidents = List.of(
-				createTestAccident(1, "1-ACC", brigade1, accidentDate1),
-				createTestAccident(2, "2-ACC", brigade1, accidentDate2),
-				createTestAccident(3, "3-ACC", brigade2, accidentDate3)
+				createTestAccident(1, brigade1, accidentDate1),
+				createTestAccident(2, brigade1, accidentDate2),
+				createTestAccident(3, brigade2, accidentDate3)
+		);
+
+		List<Client> clients = List.of(
+				createTestClient(1, 5),
+				createTestClient(2, 5),
+				createTestClient(3, 5)
 		);
 
 		masters.get(0).setBrigade(brigade1);
@@ -167,6 +171,7 @@ class MainTest extends DatabaseManagerTestBase {
 
 		main.setMasters(masters);
 		main.setAccidents(accidents);
+		main.setClients(clients);
 
 		Date startDate = new Date(now.getTime() - 10000);
 		Date endDate = new Date(now.getTime());
@@ -205,9 +210,15 @@ class MainTest extends DatabaseManagerTestBase {
 		Date accidentTime3 = new Date(now.getTime() - 400000);
 
 		List<Accident> accidents = List.of(
-				createTestAccident(1, "1-ACC", brigade, accidentTime1),
-				createTestAccident(2, "2-ACC", brigade, accidentTime2),
-				createTestAccident(3, "3-ACC", brigade, accidentTime3)
+				createTestAccident(1, brigade, accidentTime1),
+				createTestAccident(2, brigade, accidentTime2),
+				createTestAccident(3, brigade, accidentTime3)
+		);
+
+		List<Client> clients = List.of(
+				createTestClient(1, 5),
+				createTestClient(2, 5),
+				createTestClient(3, 5)
 		);
 
 		accidents.get(0).setCost(100.0);
@@ -215,6 +226,7 @@ class MainTest extends DatabaseManagerTestBase {
 		accidents.get(2).setCost(300.0);
 
 		main.setAccidents(accidents);
+		main.setClients(clients);
 
 		assertEquals(200.0, main.getAverageAccidentCost(), 0.01);
 	}
@@ -241,14 +253,18 @@ class MainTest extends DatabaseManagerTestBase {
 		Date relAccidentTime = new Date(now.getTime() - 500000);
 		Date unrelAccidentTime = new Date(now.getTime() - 1500000);
 
-		Accident relevantAccident = createTestAccident(1, "1-ACC", brigade, relAccidentTime);
+		Accident relevantAccident = createTestAccident(1, brigade, relAccidentTime);
 		relevantAccident.setCost(500.0);
 
-		Accident irrelevantAccident = createTestAccident(2, "2-ACC", brigade, unrelAccidentTime);
+		Accident irrelevantAccident = createTestAccident(2, brigade, unrelAccidentTime);
 		irrelevantAccident.setCost(500.0);
+
+		Client client1 = createTestClient(1, 5);
+		Client client2 = createTestClient(2, 5);
 
 		main.setMasters(List.of(master));
 		main.setAccidents(List.of(relevantAccident, irrelevantAccident));
+		main.setClients(List.of(client1, client2));
 
 		double salary = main.getMasterSalaryBetweenDates(1, past, now);
 
@@ -272,9 +288,9 @@ class MainTest extends DatabaseManagerTestBase {
 		String result = main.getMastersWithBrigadeInfo();
 
 		assertNotNull(result);
-		assertTrue(result.contains("Мастер1 | Бригада: 1 | Статус: Зайнятий"));
-		assertTrue(result.contains("Мастер2 | Бригада: 1 | Статус: Зайнятий"));
-		assertTrue(result.contains("Мастер3 | Бригада: 2 | Статус: Зайнятий"));
+		assertTrue(result.contains("Майстер1 | Бригада: 1 | Статус: Зайнятий"));
+		assertTrue(result.contains("Майстер2 | Бригада: 1 | Статус: Зайнятий"));
+		assertTrue(result.contains("Майстер3 | Бригада: 2 | Статус: Зайнятий"));
 	}
 
 	@Test
@@ -285,15 +301,14 @@ class MainTest extends DatabaseManagerTestBase {
 		Date accidentTime1 = new Date(now.getTime() - 500000);
 		Date accidentTime2 = new Date(now.getTime() - 450000);
 
-		List<Accident> accidents = List.of(
-				createTestAccident(1, "1-ACC", brigade, accidentTime1),
-				createTestAccident(2, "2-ACC", brigade, accidentTime2)
-		);
+		Accident accident1 = createTestAccident(1, brigade, accidentTime1);
+		Accident accident2 = createTestAccident(2, brigade, accidentTime2);
 
-		List<Client> clients = List.of(
-				createTestClient(1, "1-ACC", 5),
-				createTestClient(2, "2-ACC", 5)
-		);
+		Client client1 = createTestClient(1, 5);
+		Client client2 = createTestClient(2, 5);
+
+		List<Accident> accidents = List.of(accident1, accident2);
+		List<Client> clients = List.of(client1, client2);
 
 		main.setAccidents(accidents);
 		main.setClients(clients);
@@ -313,19 +328,24 @@ class MainTest extends DatabaseManagerTestBase {
 		Date accidentTime1 = new Date(now.getTime() - 500000);
 		Date accidentTime2 = new Date(now.getTime() - 450000);
 
-		List<Accident> accidents = List.of(
-				createTestAccident(1, "1-ACC", brigade, accidentTime1),
-				createTestAccident(2, "2-ACC", brigade, accidentTime2)
-		);
+		Accident accident1 = createTestAccident(1, brigade, accidentTime1);
+		Accident accident2 = createTestAccident(2, brigade, accidentTime2);
+
+		Client client1 = createTestClient(1, 5);
+		Client client2 = createTestClient(2, 5);
+
+		List<Accident> accidents = List.of(accident1, accident2);
+		List<Client> clients = List.of(client1, client2);
 
 		main.setAccidents(accidents);
+		main.setClients(clients);
 		main.saveAllData();
 
 		String result = main.getAccidentsBetweenDates(accidentTime1, now);
 
 		assertNotNull(result);
-		assertTrue(result.contains("1-ACC | АдресаАварії1 | 100,00 грн | " + main.getDateFormat().format(accidentTime1)));
-		assertTrue(result.contains("2-ACC | АдресаАварії2 | 200,00 грн | " + main.getDateFormat().format(accidentTime2)));
+		assertTrue(result.contains("АдресаАварії1 | 100,00 грн | " + main.getDateFormat().format(accidentTime1)));
+		assertTrue(result.contains("АдресаАварії2 | 200,00 грн | " + main.getDateFormat().format(accidentTime2)));
 	}
 
 	@Test
@@ -336,12 +356,17 @@ class MainTest extends DatabaseManagerTestBase {
 		Date accidentTime1 = new Date(now.getTime() - 500000);
 		Date accidentTime2 = new Date(now.getTime() - 450000);
 
-		List<Accident> accidents = List.of(
-				createTestAccident(1, "1-ACC", brigade, accidentTime1),
-				createTestAccident(2, "2-ACC", brigade, accidentTime2)
-		);
+		Accident accident1 = createTestAccident(1, brigade, accidentTime1);
+		Accident accident2 = createTestAccident(2, brigade, accidentTime2);
+
+		Client client1 = createTestClient(1, 5);
+		Client client2 = createTestClient(2, 5);
+
+		List<Accident> accidents = List.of(accident1, accident2);
+		List<Client> clients = List.of(client1, client2);
 
 		main.setAccidents(accidents);
+		main.setClients(clients);
 		main.saveAllData();
 
 		int result = main.getAccidentCountLastWeek();
@@ -358,13 +383,19 @@ class MainTest extends DatabaseManagerTestBase {
 		Date accidentTime1 = new Date(now.getTime() - 500000);
 		Date accidentTime2 = new Date(now.getTime() - 450000);
 
-		List<Accident> accidents = List.of(
-				createTestAccident(1, "1-ACC", brigade1, accidentTime1),
-				createTestAccident(2, "2-ACC", brigade1, accidentTime2),
-				createTestAccident(3, "3-ACC", brigade2, accidentTime1)
-		);
+		Accident accident1 = createTestAccident(1, brigade1, accidentTime1);
+		Accident accident2 = createTestAccident(2, brigade1, accidentTime2);
+		Accident accident3 = createTestAccident(3, brigade2, accidentTime1);
+
+		Client client1 = createTestClient(1, 5);
+		Client client2 = createTestClient(2, 5);
+		Client client3 = createTestClient(3, 5);
+
+		List<Accident> accidents = List.of(accident1, accident2, accident3);
+		List<Client> clients = List.of(client1, client2, client3);
 
 		main.setAccidents(accidents);
+		main.setClients(clients);
 		main.saveAllData();
 
 		Map<Integer, Integer> result = main.getAccidentCountPerBrigade();
@@ -383,13 +414,19 @@ class MainTest extends DatabaseManagerTestBase {
 		Date accidentTime1 = new Date(now.getTime() - 500000);
 		Date accidentTime2 = new Date(now.getTime() - 450000);
 
-		List<Accident> accidents = List.of(
-				createTestAccident(1, "1-ACC", brigade1, accidentTime1),
-				createTestAccident(2, "2-ACC", brigade1, accidentTime2),
-				createTestAccident(3, "3-ACC", brigade2, accidentTime1)
-		);
+		Accident accident1 = createTestAccident(1, brigade1, accidentTime1);
+		Accident accident2 = createTestAccident(2, brigade1, accidentTime2);
+		Accident accident3 = createTestAccident(3, brigade2, accidentTime1);
+
+		Client client1 = createTestClient(1, 5);
+		Client client2 = createTestClient(2, 5);
+		Client client3 = createTestClient(3, 5);
+
+		List<Accident> accidents = List.of(accident1, accident2, accident3);
+		List<Client> clients = List.of(client1, client2, client3);
 
 		main.setAccidents(accidents);
+		main.setClients(clients);
 		main.saveAllData();
 
 		List<Integer> result = main.getBrigadesWithMaxAccidents();
@@ -407,24 +444,30 @@ class MainTest extends DatabaseManagerTestBase {
 		Date accidentTime1 = new Date(now.getTime() - 500000);
 		Date accidentTime2 = new Date(now.getTime() - 450000);
 
-		List<Accident> accidents = List.of(
-				createTestAccident(1, "1-ACC", brigade1, accidentTime1),
-				createTestAccident(2, "2-ACC", brigade1, accidentTime2),
-				createTestAccident(3, "3-ACC", brigade2, accidentTime1)
-		);
+		Accident accident1 = createTestAccident(1, brigade1, accidentTime1);
+		Accident accident2 = createTestAccident(2, brigade1, accidentTime2);
+		Accident accident3 = createTestAccident(3, brigade2, accidentTime1);
 
-		accidents.get(0).setType("Тип1");
-		accidents.get(1).setType("Тип1");
-		accidents.get(2).setType("Тип2");
+		Client client1 = createTestClient(1, 5);
+		Client client2 = createTestClient(2, 5);
+		Client client3 = createTestClient(3, 5);
+
+		accident1.setType("Крах труби");
+		accident2.setType("Крах труби");
+		accident3.setType("Крах крана");
+
+		List<Accident> accidents = List.of(accident1, accident2, accident3);
+		List<Client> clients = List.of(client1, client2, client3);
 
 		main.setAccidents(accidents);
+		main.setClients(clients);
 		main.saveAllData();
 
 		Map<String, Integer> result = main.getTopBrigadePerAccidentType();
 
 		assertNotNull(result);
-		assertEquals(1, (int) result.get("Тип1"));
-		assertEquals(2, (int) result.get("Тип2"));
+		assertEquals(1, (int) result.get("Крах труби"));
+		assertEquals(2, (int) result.get("Крах крана"));
 	}
 
 	@Test
@@ -435,91 +478,81 @@ class MainTest extends DatabaseManagerTestBase {
 		Date now = new Date();
 		Date accidentTime1 = new Date(now.getTime() - 500000);
 
-		List<Accident> accidents = List.of(
-				createTestAccident(1, "1-ACC", brigade1, accidentTime1)
-		);
+		Accident accident = createTestAccident(1, brigade1, accidentTime1);
+		Client client = createTestClient(1, 5);
 
-		main.setAccidents(accidents);
+		main.setAccidents(List.of(accident));
+		main.setClients(List.of(client));
 		main.saveAllData();
 
-		// Act
 		List<Integer> result = main.getInactiveBrigadesLeftJoin();
 
-		// Assert
 		assertNotNull(result);
 		assertTrue(result.contains(2));
 	}
 
 	@Test
 	void testGetInactiveBrigadesIn() {
-		// Arrange
 		Brigade brigade1 = createTestBrigade(1);
 		Brigade brigade2 = createTestBrigade(2);
 
 		Date now = new Date();
 		Date accidentTime1 = new Date(now.getTime() - 500000);
 
-		List<Accident> accidents = List.of(
-				createTestAccident(1, "1-ACC", brigade1, accidentTime1)
-		);
+		Accident accident = createTestAccident(1, brigade1, accidentTime1);
+		Client client = createTestClient(1, 5);
 
-		main.setAccidents(accidents);
+		main.setAccidents(List.of(accident));
+		main.setClients(List.of(client));
 		main.saveAllData();
 
-		// Act
 		List<Integer> result = main.getInactiveBrigadesIn();
 
-		// Assert
 		assertNotNull(result);
 		assertTrue(result.contains(2));
 	}
 
 	@Test
 	void testGetInactiveBrigadesExists() {
-		// Arrange
 		Brigade brigade1 = createTestBrigade(1);
 		Brigade brigade2 = createTestBrigade(2);
 
 		Date now = new Date();
 		Date accidentTime1 = new Date(now.getTime() - 500000);
 
-		List<Accident> accidents = List.of(
-				createTestAccident(1, "1-ACC", brigade1, accidentTime1)
-		);
+		Accident accident = createTestAccident(1, brigade1, accidentTime1);
+		Client client = createTestClient(1, 5);
 
-		main.setAccidents(accidents);
+		main.setAccidents(List.of(accident));
+		main.setClients(List.of(client));
 		main.saveAllData();
 
-		// Act
 		List<Integer> result = main.getInactiveBrigadesExists();
 
-		// Assert
 		assertNotNull(result);
 		assertTrue(result.contains(2));
 	}
 
 	@Test
 	void testGetBrigadesWithActivityStatus() {
-		// Arrange
 		Brigade brigade1 = createTestBrigade(1);
 		Brigade brigade2 = createTestBrigade(2);
 
 		Date now = new Date();
 		Date accidentTime1 = new Date(now.getTime() - 500000);
 
-		List<Accident> accidents = List.of(
-				createTestAccident(1, "1-ACC", brigade1, accidentTime1)
-		);
+		Accident accident = createTestAccident(1, brigade1, accidentTime1);
+		Client client = createTestClient(1, 5);
 
-		accidents.getFirst().setStatus("Вирішено");
+		// Set accident status
+		accident.setStatus("Вирішено");
 
-		main.setAccidents(accidents);
+		main.setAccidents(List.of(accident));
+		main.setClients(List.of(client));
 		main.saveAllData();
 
-		// Act
 		List<String> result = main.getBrigadesWithActivityStatus();
 
-		// Assert
 		assertNotNull(result);
 		assertTrue(result.contains("Бригада 1: Найактивніша бригада"));
 		assertTrue(result.contains("Бригада 2: Не має активних аварій"));
@@ -531,7 +564,7 @@ class MainTest extends DatabaseManagerTestBase {
 		try (Statement stmt = testConnection.createStatement();
 		     ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM " + tableName)) {
 			assertTrue(rs.next(), "No results for table: " + tableName);
-			assertEquals(expectedCount, rs.getInt(1), "Count mismatch in table: " + tableName);
+			assertEquals(expectedCount, rs.getInt(1));
 			assertFalse(rs.next());
 		} finally {
 			// Reset to transaction mode for other tests

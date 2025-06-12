@@ -71,18 +71,21 @@ class AccidentsTabUITest extends BaseUITest {
 		prepareTestData();
 		window.tabbedPane().selectTab("Аварії");
 
-		JComboBoxFixture accidentCombo = window.comboBox("accidentIdField");
-		accidentCombo.selectItem(0);
+		JComboBoxFixture accidentIndexCombo = window.comboBox("accidentIndexField");
+		accidentIndexCombo.selectItem(0);
+		String accidentIndex = (String) accidentIndexCombo.target().getSelectedItem();
 
-		String accidentId = (String) accidentCombo.target().getSelectedItem();
-		ui.loadAccidentData(accidentId);
+		JComboBoxFixture accidentClientPhoneNumberCombo = window.comboBox("accidentClientPhoneNumberField");
+		accidentClientPhoneNumberCombo.selectItem(0);
+		String accidentClientPhoneNumber = (String) accidentClientPhoneNumberCombo.target().getSelectedItem();
+
+		ui.loadAccidentData(accidentClientPhoneNumber, Integer.parseInt(accidentIndex));
 
 		window.textBox("addAccidentAddressField").deleteText().enterText("вул. Оновлена 99");
 		window.button("updateAccidentButton").click();
 
 		window.optionPane().requireInformationMessage().okButton().click();
 
-		// Verify update
 		window.button("listAccidentsButton").click();
 		String result = window.textBox("resultArea").text();
 		assertTrue(result.contains("вул. Оновлена 99"));
@@ -94,16 +97,21 @@ class AccidentsTabUITest extends BaseUITest {
 		prepareTestData();
 		window.tabbedPane().selectTab("Аварії");
 
-		int initialCount = getComboboxItemsCount("accidentIdField");
-		JComboBoxFixture accidentCombo = window.comboBox("accidentIdField");
-		accidentCombo.selectItem(0);
+		int initialCount = getComboboxItemsCount("accidentIndexField");
+		JComboBoxFixture accidentIndexCombo = window.comboBox("accidentIndexField");
+		accidentIndexCombo.selectItem(0);
 
-		String accidentId = (String) accidentCombo.target().getSelectedItem();
-		ui.loadAccidentData(accidentId);
+		JComboBoxFixture accidentClientPhoneNumberCombo = window.comboBox("accidentClientPhoneNumberField");
+		accidentClientPhoneNumberCombo.selectItem(0);
+
+		String accidentClientPhoneNumber = (String) accidentClientPhoneNumberCombo.target().getSelectedItem();
+		String accidentIndex = (String) accidentIndexCombo.target().getSelectedItem();
+
+		ui.loadAccidentData(accidentClientPhoneNumber, Integer.parseInt(accidentIndex));
 		window.button("deleteAccidentButton").click();
 
 		window.optionPane().requireInformationMessage().okButton().click();
-		assertEquals(initialCount - 1, getComboboxItemsCount("accidentIdField"));
+		assertEquals(initialCount - 1, getComboboxItemsCount("accidentIndexField"));
 	}
 
 	@GUITest

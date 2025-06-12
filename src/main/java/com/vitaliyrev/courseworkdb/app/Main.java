@@ -7,7 +7,6 @@ import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.Date;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import com.vitaliyrev.courseworkdb.app.db.DatabaseManager;
@@ -18,7 +17,7 @@ public class Main {
 	private String url;
 	private String user;
 	private String password;
-	private static UserInterface userInterface;
+	public static UserInterface userInterface; // Для тестів
 
 	private List<Master> masters; // Список майстрів
 	private List<Client> clients; // Список клієнтів
@@ -28,7 +27,6 @@ public class Main {
 	private static final List<String> MASTER_STATUSES = Arrays.asList( // Стани майстрів
 			"Вільний",
 			"Зайнятий",
-			"Призначений",
 			"Усуває аварію",
 			"Очікує перевірки"
 	);
@@ -37,13 +35,10 @@ public class Main {
 			"Крах труби",
 			"Крах крана",
 			"Крах насосу",
-			"Крах водонаборної системи",
 			"Крах водонапорної системи",
-			"Крах водозаборної системи",
 			"Крах фільтраційної системи",
 			"Крах системи очищення води",
 			"Крах системи нагріву води",
-			"Крах системи теплообміну",
 			"Крах системи забору води",
 			"Крах системи під'єднання"
 	);
@@ -87,94 +82,6 @@ public class Main {
 		}
 	}
 
-	private <T> T executeQuery(String sql, ResultSetProcessor<T> processor) {
-		try (Connection conn = this.dbManager.getConnection();
-		     Statement stmt = conn.createStatement();
-		     ResultSet rs = stmt.executeQuery(sql)) {
-			return processor.process(rs);
-		} catch (SQLException e) {
-			e.printStackTrace();
-			return null;
-		}
-	}
-
-	private <T> T executeParamQuery(String sql, Object param, ResultSetProcessor<T> processor) {
-		try (Connection conn = this.dbManager.getConnection();
-		     PreparedStatement stmt = conn.prepareStatement(sql)) {
-			stmt.setObject(1, param);
-			try (ResultSet rs = stmt.executeQuery()) {
-				if (rs.next()) {
-					return processor.process(rs);
-				} else {
-					return null;
-				}
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-			return null;
-		}
-	}
-
-	private <T> T executeParamQuery(String sql, Object param1, Object param2, ResultSetProcessor<T> processor) {
-		try (Connection conn = this.dbManager.getConnection();
-		     PreparedStatement stmt = conn.prepareStatement(sql)) {
-			stmt.setObject(1, param1);
-			stmt.setObject(2, param2);
-			try (ResultSet rs = stmt.executeQuery()) {
-				return processor.process(rs);
-			}
-		} catch (SQLException e) {
-			e.printStackTrace();
-			return null;
-		}
-	}
-
-	private <T> T executeScalarQuery(String sql, ResultSetProcessor<T> processor) {
-		try (Connection conn = this.dbManager.getConnection();
-		     Statement stmt = conn.createStatement();
-		     ResultSet rs = stmt.executeQuery(sql)) {
-			if (rs.next()) {
-				return processor.process(rs);
-			}
-			return null;
-		} catch (SQLException e) {
-			e.printStackTrace();
-			return null;
-		}
-	}
-
-	private List<Integer> executeIdListQuery(String sql) {
-		return executeQuery(sql, rs -> {
-			List<Integer> result = new ArrayList<>();
-			while (rs.next()) {
-				result.add(rs.getInt(1));
-			}
-			return result;
-		});
-	}
-
-	private <T> T executeResilientQuery(Supplier<T> querySupplier) {
-		try {
-			if (!this.dbManager.isConnectionValid()) {
-				System.out.println("Connection invalid. Reconnecting...");
-				reconnect();
-			}
-			T result = querySupplier.get();
-			if (userInterface != null) {
-				userInterface.updateConnectionStatus();
-			}
-			return result;
-		} catch (SQLException e) {
-			e.printStackTrace();
-			return null;
-		}
-	}
-
-	@FunctionalInterface
-	private interface ResultSetProcessor<T> {
-		T process(ResultSet rs) throws SQLException;
-	}
-
 	public void reconnect() throws SQLException {
 		if (dbManager != null) {
 			dbManager.close();
@@ -200,7 +107,7 @@ public class Main {
 		return dateFormat;
 	}
 
-	// Сеттери для списків, використовуються тільки для проведення тестів
+	// Сеттери для списків
 	public void setMasters(List<Master> masters) {
 		this.masters = masters != null ? masters : new ArrayList<>();
 	}
@@ -233,6 +140,17 @@ public class Main {
 			return 1;
 		}
 		return clients.stream().mapToInt(Entity::getIndex).max().orElse(0) + 1;
+	}
+
+	public int getNextAccidentIndexForClient(String phoneNumber) {
+		int maxIndex = 0;
+		for (Accident accident : accidents) {
+			if (phoneNumber.equals(accident.getClientPhoneNumber()) &&
+					accident.getAccidentIndex() > maxIndex) {
+				maxIndex = accident.getAccidentIndex();
+			}
+		}
+		return maxIndex + 1;
 	}
 
 	// Обчислення заробітної плати майстра за період
@@ -328,11 +246,6 @@ public class Main {
 		for (Master master : masters) {
 			departmentNumbers.add(master.getDepartmentNumber());
 		}
-		for (Accident accident : accidents) {
-			if (accident.getClient() != null) {
-				departmentNumbers.add(accident.getClient().getDepartmentNumber());
-			}
-		}
 		List<String> numbers = new ArrayList<>();
 		for (Integer number : departmentNumbers) {
 			numbers.add(number.toString());
@@ -341,22 +254,22 @@ public class Main {
 	}
 
 	// Номери бригад та відділів
-	public List<String> getBrigadeAndDepartmentNumbers() {
+	public static List<String> getBrigadeAndDepartmentNumbers() {
 		return BRIGADE_AND_DEPARTMENT_NUMBERS;
 	}
 
 	// Статуси майстрів
-	public List<String> getMasterStatuses() {
+	public static List<String> getMasterStatuses() {
 		return MASTER_STATUSES;
 	}
 
 	// Статуси аварій
-	public List<String> getAccidentStatuses() {
+	public static List<String> getAccidentStatuses() {
 		return ACCIDENT_STATUSES;
 	}
 
 	// Типи аварій
-	public List<String> getAccidentTypes() {
+	public static List<String> getAccidentTypes() {
 		return ACCIDENT_TYPES;
 	}
 
@@ -370,40 +283,64 @@ public class Main {
 		return null;
 	}
 
+	// Отримання майстра за ім'ям
+	public Master getMasterByName(String masterName) {
+		for (Master master : masters) {
+			if (master.getName().equals(masterName)) {
+				return master;
+			}
+		}
+		return null;
+	}
+
 	// Отримання клієнта за ідентифікатором аварії
-	public Client getClientByAccidentId(String accidentId) {
+	public Client getClientByPhoneNumber(String phoneNumber) {
 		for (Client client : clients) {
-			if (client.getAccidentId().equals(accidentId)) {
+			if (client.getPhoneNumber().equals(phoneNumber)) {
 				return client;
 			}
 		}
 		return null;
 	}
 
-	// Отримання аварії за ідентифікатором
-	public Accident getAccidentById(String accidentId) {
+	public Client getClientByName(String clientName) {
+		for (Client client : clients) {
+			if (client.getName().equals(clientName)) {
+				return client;
+			}
+		}
+		return null;
+	}
+
+	// Отримання аварії за номеров телефона клієнта та індексом аварії
+	public Accident getAccidentByPhoneNumAccIndex(String phoneNumber, int accidentIndex) {
 		for (Accident accident : accidents) {
-			if (accident.getAccidentId().equals(accidentId)) {
+			if (phoneNumber.equals(accident.getClientPhoneNumber()) &&
+					accident.getAccidentIndex() == accidentIndex) {
 				return accident;
 			}
 		}
 		return null;
 	}
 
+	public List<Integer> getAccidentIndicesForClient(String phoneNumber) {
+		return accidents.stream()
+				.filter(a -> phoneNumber.equals(a.getClientPhoneNumber()))
+				.map(Accident::getAccidentIndex)
+				.sorted()
+				.collect(Collectors.toList());
+	}
+
 	// Завантаження всіх даних
 	public void loadAllData() {
 		try {
-			List<Brigade> dbBrigades = dbManager.loadBrigades();
+			List<Brigade> dbBrigades = dbManager.loadExistingBrigades();
 			Map<Integer, Brigade> brigadeMap = dbBrigades.stream()
 					.collect(Collectors.toMap(Brigade::getNumber, b -> b));
 
-			// Load clients first
 			this.clients = dbManager.loadClients();
-			Map<String, Client> clientMap = clients.stream()
-					.collect(Collectors.toMap(Client::getAccidentId, c -> c));
-
 			this.masters = dbManager.loadMasters(brigadeMap);
-			this.accidents = dbManager.loadAccidents(brigadeMap, clientMap);
+			this.accidents = dbManager.loadAccidents(brigadeMap);
 		} catch (SQLException e) {
 			e.printStackTrace();
 			JOptionPane.showMessageDialog(null, "Помилка при завантаженні даних з БД: " + e.getMessage(), "Помилка", JOptionPane.ERROR_MESSAGE);
@@ -426,14 +363,14 @@ public class Main {
 				}
 			}
 
-			// Save in proper order with foreign key dependencies
-			dbManager.saveBrigades(brigadeNumbers);
-			if (accidents != null) dbManager.saveAccidents(accidents);
+			// Потрібно зберігати дані саме в цьому порядку
+			dbManager.saveExistingBrigades(brigadeNumbers);
 			if (clients != null) dbManager.saveClients(clients);
+			if (accidents != null) dbManager.saveAccidents(accidents);
 			if (masters != null) dbManager.saveMasters(masters);
 		} catch (SQLException e) {
 			e.printStackTrace();
-			JOptionPane.showMessageDialog(null, "Failed to save data: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+			JOptionPane.showMessageDialog(null, "Помилка при збереженні даних: " + e.getMessage(), "Помилка", JOptionPane.ERROR_MESSAGE);
 		}
 	}
 
@@ -446,27 +383,16 @@ public class Main {
 		return bd.doubleValue();
 	}
 
-	// Метод для генерації випадкового рядка
-	public static String generateRandomString(int length) {
-		final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
-		Random random = new Random();
-		StringBuilder sb = new StringBuilder(length);
-		for (int i = 0; i < length; i++) {
-			int index = random.nextInt(CHARACTERS.length());
-			sb.append(CHARACTERS.charAt(index));
-		}
-		return sb.toString();
-	}
-
 	// SQL
 	// 1
 	public String getMastersWithBrigadeInfo() {
-		return executeResilientQuery(() -> {
-			String sql = "SELECT m.name AS master_name, b.number AS brigade_number, m.status " +
+		return dbManager.executeResilientQuery(() -> {
+			String sql = "SELECT m.name AS master_name, b.number AS brigade_number, ms.status AS status " +
 					"FROM masters m " +
-					"JOIN brigades b ON m.brigade_number = b.number " +
+					"JOIN existing_brigades b ON m.brigade_number = b.number " +
+					"JOIN master_statuses ms ON m.status_id = ms.id " +
 					"ORDER BY m.name";
-			return executeQuery(sql, rs -> {
+			return dbManager.executeQuery(sql, rs -> {
 				StringBuilder sb = new StringBuilder();
 				while (rs.next()) {
 					sb.append(rs.getString("master_name"))
@@ -478,15 +404,15 @@ public class Main {
 				}
 				return sb.toString();
 			});
-		});
+		}, this);
 	}
 
 	// 2
 	public String findClientsByNamePattern(String pattern) {
-		return executeResilientQuery(() -> {
+		return dbManager.executeResilientQuery(() -> {
 			String sql = "SELECT name, phone_number, department_number " +
 					"FROM clients WHERE name LIKE ?";
-			return executeParamQuery(sql, pattern + "%", rs -> {
+			return dbManager.executeParamQuery(sql, pattern + "%", rs -> {
 				StringBuilder result = new StringBuilder();
 				do {
 					result.append(rs.getString("name"))
@@ -498,137 +424,142 @@ public class Main {
 				} while (rs.next());
 				return result.toString();
 			});
-		});
+		}, this);
 	}
 
 	// 3
 	public String getAccidentsBetweenDates(Date start, Date end) {
-		return executeResilientQuery(() -> {
-			String sql = "SELECT accident_id, address, cost, date " +
-					"FROM accidents WHERE date BETWEEN ? AND ?";
-			return executeParamQuery(sql,
+		return dbManager.executeResilientQuery(() -> {
+			String sql = "SELECT address, cost, date, at.type AS type, as1.status AS status " +
+					"FROM accidents a " +
+					"JOIN accident_types at ON a.type_id = at.id " +
+					"JOIN accident_statuses as1 ON a.status_id = as1.id " +
+					"WHERE date BETWEEN ? AND ?";
+			return dbManager.executeParamQuery(sql,
 					new java.sql.Date(start.getTime()),
 					new java.sql.Date(end.getTime()),
 					rs -> {
 						StringBuilder sb = new StringBuilder();
 						while (rs.next()) {
-							sb.append(String.format("%s | %s | %.2f грн | %s%n",
-									rs.getString("accident_id"),
+							sb.append(String.format("%s | %.2f грн | %s | Тип: %s | Статус: %s%n",
 									rs.getString("address"),
 									rs.getDouble("cost"),
-									getDateFormat().format(rs.getDate("date"))));
+									getDateFormat().format(rs.getDate("date")),
+									rs.getString("type"),
+									rs.getString("status")));
 						}
 						return sb.toString();
 					});
-		});
+		}, this);
 	}
 
 	// 4
 	public int getAccidentCountLastWeek() {
-		return executeResilientQuery(() -> {
+		return dbManager.executeResilientQuery(() -> {
 			String sql = "SELECT COUNT(*) FROM accidents " +
 					"WHERE date BETWEEN CURRENT_DATE - 7 AND CURRENT_DATE";
-			return executeScalarQuery(sql, rs -> rs.getInt(1));
-		});
+			return dbManager.executeScalarQuery(sql, rs -> rs.getInt(1));
+		}, this);
 	}
 
 	// 5
 	public Map<Integer, Integer> getAccidentCountPerBrigade() {
-		return executeResilientQuery(() -> {
+		return dbManager.executeResilientQuery(() -> {
 			String sql = "SELECT brigade_number, COUNT(*) as accident_count " +
 					"FROM accidents GROUP BY brigade_number";
-			return executeQuery(sql, rs -> {
+			return dbManager.executeQuery(sql, rs -> {
 				Map<Integer, Integer> result = new HashMap<>();
 				while (rs.next()) {
 					result.put(rs.getInt("brigade_number"), rs.getInt("accident_count"));
 				}
 				return result;
 			});
-		});
+		}, this);
 	}
 
 	// 6
 	public List<Integer> getBrigadesWithMaxAccidents() {
-		return executeResilientQuery(() -> {
+		return dbManager.executeResilientQuery(() -> {
 			String sql = "SELECT brigade_number " +
 					"FROM accidents " +
 					"GROUP BY brigade_number " +
 					"HAVING COUNT(*) >= ALL (SELECT COUNT(*) FROM accidents GROUP BY brigade_number)";
-			return executeQuery(sql, rs -> {
+			return dbManager.executeQuery(sql, rs -> {
 				List<Integer> result = new ArrayList<>();
 				while (rs.next()) {
 					result.add(rs.getInt("brigade_number"));
 				}
 				return result;
 			});
-		});
+		}, this);
 	}
 
 	// 7
 	public Map<String, Integer> getTopBrigadePerAccidentType() {
-		return executeResilientQuery(() -> {
-			String sql = "SELECT a1.type, a1.brigade_number " +
-					"FROM accidents a1 " +
-					"WHERE a1.brigade_number = (SELECT a2.brigade_number " +
-					"                           FROM accidents a2 " +
-					"                           WHERE a2.type = a1.type " +
-					"                           GROUP BY a2.brigade_number " +
+		return dbManager.executeResilientQuery(() -> {
+			String sql = "SELECT at.type, a.brigade_number " +
+					"FROM accidents a " +
+					"JOIN accident_types at ON a.type_id = at.id " +
+					"WHERE a.brigade_number = (SELECT a1.brigade_number " +
+					"                           FROM accidents a1 " +
+					"                           WHERE a1.type_id = a.type_id " +
+					"                           GROUP BY a1.brigade_number " +
 					"                           ORDER BY COUNT(*) DESC " +
 					"                           LIMIT 1) " +
-					"GROUP BY a1.type, a1.brigade_number";
-			return executeQuery(sql, rs -> {
+					"GROUP BY at.type, a.brigade_number";
+			return dbManager.executeQuery(sql, rs -> {
 				Map<String, Integer> result = new HashMap<>();
 				while (rs.next()) {
 					result.put(rs.getString("type"), rs.getInt("brigade_number"));
 				}
 				return result;
 			});
-		});
+		}, this);
 	}
 
 	// 8
 	public List<Integer> getInactiveBrigadesLeftJoin() {
-		return executeResilientQuery(() -> {
+		return dbManager.executeResilientQuery(() -> {
 			String sql = "SELECT b.number " +
-					"FROM brigades b " +
+					"FROM existing_brigades b " +
 					"LEFT JOIN accidents a ON b.number = a.brigade_number " +
 					"WHERE a.id IS NULL";
-			return executeIdListQuery(sql);
-		});
+			return dbManager.executeIdListQuery(sql);
+		}, this);
 	}
 
 	public List<Integer> getInactiveBrigadesIn() {
-		return executeResilientQuery(() -> {
-			String sql = "SELECT number FROM brigades " +
+		return dbManager.executeResilientQuery(() -> {
+			String sql = "SELECT number FROM existing_brigades " +
 					"WHERE number NOT IN (SELECT brigade_number FROM accidents)";
-			return executeIdListQuery(sql);
-		});
+			return dbManager.executeIdListQuery(sql);
+		}, this);
 	}
 
 	public List<Integer> getInactiveBrigadesExists() {
-		return executeResilientQuery(() -> {
-			String sql = "SELECT number FROM brigades b " +
+		return dbManager.executeResilientQuery(() -> {
+			String sql = "SELECT number FROM existing_brigades b " +
 					"WHERE NOT EXISTS (SELECT 1 FROM accidents a WHERE a.brigade_number = b.number)";
-			return executeIdListQuery(sql);
-		});
+			return dbManager.executeIdListQuery(sql);
+		}, this);
 	}
 
 	// 9
 	public List<String> getBrigadesWithActivityStatus() {
-		return executeResilientQuery(() -> {
+		return dbManager.executeResilientQuery(() -> {
 			String sql = "SELECT number, 'Найактивніша бригада' AS comment " +
-					"FROM brigades WHERE number = (SELECT brigade_number FROM accidents GROUP BY brigade_number ORDER BY COUNT(*) DESC LIMIT 1) " +
+					"FROM existing_brigades WHERE number = (SELECT brigade_number FROM accidents GROUP BY brigade_number ORDER BY COUNT(*) DESC LIMIT 1) " +
 					"UNION " +
 					"SELECT number, 'Не має активних аварій' AS comment " +
-					"FROM brigades WHERE number NOT IN (SELECT DISTINCT brigade_number FROM accidents WHERE status NOT IN ('Вирішено', 'Відмінено'))";
-			return executeQuery(sql, rs -> {
+					"FROM existing_brigades WHERE number NOT IN (SELECT DISTINCT brigade_number FROM accidents WHERE status_id IN (SELECT id FROM accident_statuses WHERE status NOT IN ('Вирішено', 'Відмінено')))";
+			return dbManager.executeQuery(sql, rs -> {
 				List<String> result = new ArrayList<>();
 				while (rs.next()) {
 					result.add("Бригада " + rs.getInt("number") + ": " + rs.getString("comment"));
 				}
 				return result;
 			});
-		});
+		}, this);
 	}
 
 	// Головний метод
