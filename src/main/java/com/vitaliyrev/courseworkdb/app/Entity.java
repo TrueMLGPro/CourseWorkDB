@@ -1,4 +1,4 @@
-package app;
+package com.vitaliyrev.courseworkdb.app;
 
 // Базовий клас "Сутність"
 public abstract class Entity {

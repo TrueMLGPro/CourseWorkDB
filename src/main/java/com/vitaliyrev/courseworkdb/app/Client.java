@@ -1,41 +1,28 @@
-package app;
+package com.vitaliyrev.courseworkdb.app;
 
 // Клас "Клієнт"
 public class Client extends Entity {
 	// Персональні дані клієнта
-	private String accidentId; // Унікальний ідентифікатор аварії, пов'язаної з клієнтом
 	private String name; // Ім'я клієнта
 	private String address; // Адреса проживання клієнта
 	private String phoneNumber; // Номер телефону клієнта
 	private int departmentNumber; // Номер відділу, з яким пов'язан клієнт
 
 	// Конструктор класу з параметрами для ініціалізації всіх полів
-	public Client(int index, String accidentId, String name, String address, String phoneNumber, int departmentNumber) {
+	public Client(int index, String name, String address, String phoneNumber, int departmentNumber) {
 		super(index); // Виклик конструктора батьківського класу Entity з передачею індексу
-		this.accidentId = accidentId;
 		this.name = name;
 		this.address = address;
 		this.phoneNumber = phoneNumber;
 		this.departmentNumber = departmentNumber;
 	}
 
-	// Конструктор класу з параметрами типу String[], що використовується для ініціалізації об'єкта з рядка даних
-	public Client(String[] data) {
-		super(Integer.parseInt(data[0]));
-		this.accidentId = data[1];
-		this.name = data[2];
-		this.address = data[3];
-		this.phoneNumber = data[4];
-		this.departmentNumber = Integer.parseInt(data[5]);
-	}
-
 	// Гетери та сетери для доступу до приватних полів класу
-	public String getAccidentId() {
-		return accidentId;
-	}
-
-	public void setAccidentId(String accidentId) {
-		this.accidentId = accidentId;
+	public void setAccident(Accident accident) {
+		if (accident != null) {
+			this.address = accident.getAddress();
+			accident.setAddress(this.address);
+		}
 	}
 
 	public String getName() {
@@ -73,6 +60,6 @@ public class Client extends Entity {
 	// Перевизначення методу toString() для представлення об'єкта у вигляді рядка
 	@Override
 	public String toString() {
-		return getIndex() + ";" + accidentId + ";" + name + ";" + address + ";" + phoneNumber + ";" + departmentNumber;
+		return getIndex() + ";" + name + ";" + address + ";" + phoneNumber + ";" + departmentNumber;
 	}
 }

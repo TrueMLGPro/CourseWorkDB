@@ -1,4 +1,4 @@
-package app;
+package com.vitaliyrev.courseworkdb.app;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,13 +33,13 @@ public class Brigade {
 		masters.remove(master);
 	}
 
+	public List<Master> getMasters() {
+		return masters;
+	}
+
 	// Перевизначення методу toString() для представлення об'єкта у вигляді рядка
 	@Override
 	public String toString() {
-		return number + ";" + masters.stream()
-			.map(Entity::getIndex) // Отримання індексів майстрів
-			.map(String::valueOf) // Перетворення індексів у рядки
-			.reduce("", (a, b) -> a + ";" + b) // Об'єднання рядків з індексами
-			.substring(1); // Видалення початкового символу ";"
+		return String.valueOf(number);
 	}
 }

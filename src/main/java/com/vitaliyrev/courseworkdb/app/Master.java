@@ -1,4 +1,4 @@
-package app;
+package com.vitaliyrev.courseworkdb.app;
 
 // Клас "Майстер"
 public class Master extends Entity {
@@ -21,18 +21,6 @@ public class Master extends Entity {
 		this.status = status;
 		this.brigade = brigade;
 		this.departmentNumber = departmentNumber;
-	}
-
-	// Конструктор класу з параметрами типу String[], що використовується для ініціалізації об'єкта з рядка даних
-	public Master(String[] data) {
-		super(Integer.parseInt(data[0]));
-		this.name = data[1];
-		this.address = data[2];
-		this.phoneNumber = data[3];
-		this.experience = Integer.parseInt(data[4]);
-		this.status = data[5];
-		this.brigade = new Brigade(Integer.parseInt(data[6]));
-		this.departmentNumber = Integer.parseInt(data[7]);
 	}
 
 	// Гетери та сетери для доступу до приватних полів класу
