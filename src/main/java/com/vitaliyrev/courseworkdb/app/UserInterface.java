@@ -121,6 +121,7 @@ public class UserInterface {
 		});
 
 		updateConnectionStatus();
+		populateAllComboBoxes();
 	}
 
 	private JPanel createMastersTab() {
@@ -184,8 +185,7 @@ public class UserInterface {
 		masterListNameField.addActionListener(e -> {
 			String selectedMasterName = (String) masterListNameField.getSelectedItem();
 			if (selectedMasterName != null) {
-				Master selectedMaster = main.getMasterByName(selectedMasterName);
-				loadMasterData(selectedMaster.getName());
+				loadMasterData(selectedMasterName);
 			}
 		});
 
@@ -198,7 +198,6 @@ public class UserInterface {
 		addField(fieldsPanel, gbc, "Початкова дата (dd/MM/yyyy):", masterStartDateField = new JTextField(30));
 		addField(fieldsPanel, gbc, "Кінцева дата (dd/MM/yyyy):", masterEndDateField = new JTextField(30));
 
-		populateMasterComboBoxes(); // Заповнення вибіркових полів даними про майстрів
 
 		panel.add(buttonPanel, BorderLayout.EAST);
 		panel.add(fieldsPanel, BorderLayout.CENTER);
@@ -277,7 +276,6 @@ public class UserInterface {
 		gbc.fill = GridBagConstraints.HORIZONTAL;
 		fieldsPanel.add(new JSeparator(SwingConstants.HORIZONTAL), gbc);
 
-		populateClientComboBoxes(); // Заповнення вибіркових полів даними про клієнтів
 
 		panel.add(buttonPanel, BorderLayout.EAST);
 		panel.add(fieldsPanel, BorderLayout.CENTER);
@@ -357,9 +355,7 @@ public class UserInterface {
 		accidentIndexField.addActionListener(e -> {
 			String selectedPhoneNumber = (String) accidentClientPhoneNumberField.getSelectedItem();
 			String selectedId = (String) accidentIndexField.getSelectedItem();
-			if (selectedId != null) {
-				loadAccidentData(selectedPhoneNumber, Integer.parseInt(selectedId)); // Завантаження даних про вибрану аварію
-			}
+			loadAccidentData(selectedPhoneNumber, Integer.parseInt(selectedId)); // Завантаження даних про вибрану аварію
 		});
 
 		gbc.gridx = 0;
@@ -371,7 +367,6 @@ public class UserInterface {
 		addField(fieldsPanel, gbc, "Початкова дата (dd/MM/yyyy):", accidentStartDateField = new JTextField(30));
 		addField(fieldsPanel, gbc, "Кінцева дата (dd/MM/yyyy):", accidentEndDateField = new JTextField(30));
 
-		populateAccidentComboBoxes(); // Заповнення вибіркових полів даними про аварії
 
 		panel.add(buttonPanel, BorderLayout.EAST);
 		panel.add(fieldsPanel, BorderLayout.CENTER);
@@ -448,7 +443,6 @@ public class UserInterface {
 
 		mastersWithBrigadeInfoButton.addActionListener(e -> {
 			String result = main.getMastersWithBrigadeInfo();
-			// Null check for the result string
 			if (result != null && !result.isEmpty()) {
 				resultArea.setText("Майстри з інформацією про бригади:\n" + result);
 			} else {
@@ -463,7 +457,6 @@ public class UserInterface {
 				return;
 			}
 			String result = main.findClientsByNamePattern(namePattern);
-			// Null check for the result string
 			if (result != null && !result.isEmpty()) {
 				resultArea.setText("Клієнти за іменем '" + namePattern + "':\n" + result);
 			} else {
@@ -760,22 +753,30 @@ public class UserInterface {
 	}
 
 	private void countMasters() {
-		resultArea.setText("Кількість майстрів: " + main.getMasters().size());
+		try {
+			resultArea.setText("Кількість майстрів: " + main.getMasters().size());
+		} catch (SQLException e) {
+			showErrorOptionPane("Помилка підрахунку майстрів: " + e.getMessage());
+		}
 	}
 
 	private void calculateMasterSalary() {
-		validateField(masterListNameField, "Майстер");
+		try {
+			validateField(masterListNameField, "Майстер");
 
-		String masterName = masterListNameField.getSelectedItem().toString();
-		Master selectedMaster = main.getMasterByName(masterName);
-		Date startDate = parseDate(masterStartDateField.getText());
-		Date endDate = parseDate(masterEndDateField.getText());
+			String masterName = masterListNameField.getSelectedItem().toString();
+			Master selectedMaster = main.getMasterByName(masterName);
+			Date startDate = parseDate(masterStartDateField.getText());
+			Date endDate = parseDate(masterEndDateField.getText());
 
-		if (startDate != null && endDate != null) {
-			double salary = main.getMasterSalaryBetweenDates(selectedMaster.getIndex(), startDate, endDate);
-			resultArea.setText("Заробіток майстра " + masterName + " за період з " + main.getDateFormat().format(startDate) + " по " + main.getDateFormat().format(endDate) + " : " + salary);
-		} else {
-			resultArea.setText("Неправильний формат дати. Використовуйте dd/MM/yyyy.");
+			if (selectedMaster != null && startDate != null && endDate != null) {
+				double salary = main.getMasterSalaryBetweenDates(selectedMaster.getIndex(), startDate, endDate);
+				resultArea.setText("Заробіток майстра " + masterName + " за період з " + main.getDateFormat().format(startDate) + " по " + main.getDateFormat().format(endDate) + " : " + salary);
+			} else {
+				if(selectedMaster == null) showErrorOptionPane("Майстра не знайдено.");
+			}
+		} catch (IllegalArgumentException | SQLException ex) {
+			showErrorOptionPane("Помилка розрахунку зарплати: " + ex.getMessage());
 		}
 	}
 
@@ -815,15 +816,13 @@ public class UserInterface {
 
 			Brigade brigade = new Brigade(brigadeNumber);
 			Master master = new Master(newIndex, name, address, phoneNumber, experience, status, brigade, departmentNumber);
-			main.getMasters().add(master);
-			brigade.addMaster(master);
-			main.saveAllData();
+
+			main.addMaster(master);
+
 			showSuccessOptionPane("Майстра додано успішно!");
 			clearAddFields(FIELD_TYPES.MASTER_FIELD);
-			populateMasterComboBoxes();
-			populateClientComboBoxes();
-			populateAccidentComboBoxes();
-		} catch (IllegalArgumentException ex) {
+			populateAllComboBoxes();
+		} catch (IllegalArgumentException | SQLException ex) {
 			showErrorOptionPane("Помилка додавання майстра: " + ex.getMessage());
 		}
 	}
@@ -835,15 +834,11 @@ public class UserInterface {
 			String masterName = (String) masterListNameField.getSelectedItem();
 			Master masterToRemove = main.getMasterByName(masterName);
 			if (masterToRemove != null) {
-				main.getMasters().remove(masterToRemove);
-				masterToRemove.getBrigade().removeMaster(masterToRemove);
-				main.dbManager.deleteMaster(masterToRemove.getIndex());
-				main.saveAllData();
+				main.deleteMaster(masterToRemove.getIndex());
 				showSuccessOptionPane("Майстра \"" + masterName + "\" видалено успішно!");
+				clearAddFields(FIELD_TYPES.MASTER_FIELD);
 				clearDeleteFields(FIELD_TYPES.MASTER_FIELD);
-				populateMasterComboBoxes();
-				populateClientComboBoxes();
-				populateAccidentComboBoxes();
+				populateAllComboBoxes();
 			} else {
 				showErrorOptionPane("Майстра \"" + masterName + "\" не знайдено.");
 			}
@@ -854,97 +849,97 @@ public class UserInterface {
 
 	private void updateMaster() {
 		try {
+			validateField(masterListNameField, "Майстер");
 			validateField(addMasterNameField, "Ім'я та прізвище");
-			validateField(addMasterAddressField, "Адреса");
-			validateField(addMasterPhoneField, "Номер телефону");
-			validateField(addMasterExperienceField, "Стаж");
-			validateField(addMasterStatusField, "Стан");
-			validateField(addMasterBrigadeField, "Номер бригади");
-			validateField(addMasterDepartmentField, "Номер відділення");
 
 			String masterName = (String) masterListNameField.getSelectedItem();
 			Master masterToUpdate = main.getMasterByName(masterName);
 			if (masterToUpdate != null) {
-				String name = addMasterNameField.getText();
-				String address = addMasterAddressField.getText();
-				String phoneNumber = addMasterPhoneField.getText();
-				int experience = Integer.parseInt(addMasterExperienceField.getText());
-				String status = (String) addMasterStatusField.getSelectedItem();
-				int brigadeNumber = Integer.parseInt((String) addMasterBrigadeField.getSelectedItem());
-				int departmentNumber = Integer.parseInt((String) addMasterDepartmentField.getSelectedItem());
+				masterToUpdate.setName(addMasterNameField.getText());
+				masterToUpdate.setAddress(addMasterAddressField.getText());
+				masterToUpdate.setPhoneNumber(addMasterPhoneField.getText());
+				masterToUpdate.setExperience(Integer.parseInt(addMasterExperienceField.getText()));
+				masterToUpdate.setStatus((String) addMasterStatusField.getSelectedItem());
+				masterToUpdate.setBrigade(new Brigade(Integer.parseInt((String) addMasterBrigadeField.getSelectedItem())));
+				masterToUpdate.setDepartmentNumber(Integer.parseInt((String) addMasterDepartmentField.getSelectedItem()));
 
-				masterToUpdate.setName(name);
-				masterToUpdate.setAddress(address);
-				masterToUpdate.setPhoneNumber(phoneNumber);
-				masterToUpdate.setExperience(experience);
-				masterToUpdate.setStatus(status);
-				masterToUpdate.setBrigade(new Brigade(brigadeNumber));
-				masterToUpdate.setDepartmentNumber(departmentNumber);
-
-				main.saveAllData();
+				main.updateMaster(masterToUpdate);
 				showSuccessOptionPane("Майстра \"" + masterName + "\" оновлено успішно!");
 				clearAddFields(FIELD_TYPES.MASTER_FIELD);
-				populateMasterComboBoxes();
-				populateClientComboBoxes();
-				populateAccidentComboBoxes();
+				populateAllComboBoxes();
 			} else {
-				showErrorOptionPane("Майстра з індексом " + masterName + " не знайдено.");
+				showErrorOptionPane("Майстра з іменем " + masterName + " не знайдено.");
 			}
-		} catch (IllegalArgumentException ex) {
+		} catch (IllegalArgumentException | SQLException ex) {
 			showErrorOptionPane("Помилка оновлення майстра: " + ex.getMessage());
 		}
 	}
 
 	private void listMasters() {
-		StringBuilder sb = new StringBuilder("Список майстрів\n");
+		try {
+			List<Master> masters = main.getMasters();
+			StringBuilder sb = new StringBuilder("Список майстрів\n");
 
-		Map<Integer, Master> uniqueMasters = new LinkedHashMap<>();
-		for (Master master : main.getMasters()) {
-			uniqueMasters.put(master.getIndex(), master);
+			if (masters.isEmpty()) {
+				sb.append("Немає майстрів у базі даних.");
+				resultArea.setText(sb.toString());
+				return;
+			}
+			Map<Integer, Master> uniqueMasters = new LinkedHashMap<>();
+			for (Master master : masters) {
+				uniqueMasters.put(master.getIndex(), master);
+			}
+
+			int nameWidth = "Ім'я та прізвище".length();
+			int addressWidth = "Адреса".length();
+			int phoneWidth = "Номер телефону".length();
+			int experienceWidth = "Стаж".length();
+			int statusWidth = "Стан".length();
+			int brigadeWidth = "Номер бригади".length();
+			int departmentWidth = "Номер відділення".length();
+
+			for (Master master : uniqueMasters.values()) {
+				nameWidth = Math.max(nameWidth, master.getName().length());
+				addressWidth = Math.max(addressWidth, master.getAddress().length());
+				phoneWidth = Math.max(phoneWidth, master.getPhoneNumber().length());
+				experienceWidth = Math.max(experienceWidth, (master.getExperience() + " років").length());
+				statusWidth = Math.max(statusWidth, master.getStatus().length());
+				brigadeWidth = Math.max(brigadeWidth, String.valueOf(master.getBrigade().getNumber()).length());
+				departmentWidth = Math.max(departmentWidth, String.valueOf(master.getDepartmentNumber()).length());
+			}
+
+			String format = String.format("%%-%ds  %%-%ds  %%-%ds  %%-%ds  %%-%ds  %%-%ds  %%-%ds\n",
+					nameWidth, addressWidth, phoneWidth, experienceWidth, statusWidth, brigadeWidth, departmentWidth);
+
+			sb.append(String.format(format, "Ім'я та прізвище", "Адреса", "Номер телефону", "Стаж", "Стан", "Номер бригади", "Номер відділення"));
+			sb.append(String.format(format, "-".repeat(nameWidth), "-".repeat(addressWidth),
+					"-".repeat(phoneWidth), "-".repeat(experienceWidth), "-".repeat(statusWidth), "-".repeat(brigadeWidth),
+					"-".repeat(departmentWidth)));
+
+			for (Master master : uniqueMasters.values()) {
+				sb.append(String.format(format,
+						master.getName(),
+						master.getAddress(),
+						master.getPhoneNumber(),
+						master.getExperience() + " років",
+						master.getStatus(),
+						master.getBrigade().getNumber(),
+						master.getDepartmentNumber()
+				));
+			}
+			resultArea.setText(sb.toString());
+
+		} catch (SQLException ex) {
+			showErrorOptionPane("Помилка завантаження списку майстрів: " + ex.getMessage());
 		}
-
-		int nameWidth = "Ім'я та прізвище".length();
-		int addressWidth = "Адреса".length();
-		int phoneWidth = "Номер телефону".length();
-		int experienceWidth = "Стаж".length();
-		int statusWidth = "Стан".length();
-		int brigadeWidth = "Номер бригади".length();
-		int departmentWidth = "Номер відділення".length();
-
-		for (Master master : uniqueMasters.values()) {
-			nameWidth = Math.max(nameWidth, master.getName().length());
-			addressWidth = Math.max(addressWidth, master.getAddress().length());
-			phoneWidth = Math.max(phoneWidth, master.getPhoneNumber().length());
-			experienceWidth = Math.max(experienceWidth, (master.getExperience() + " років").length());
-			statusWidth = Math.max(statusWidth, master.getStatus().length());
-			brigadeWidth = Math.max(brigadeWidth, String.valueOf(master.getBrigade().getNumber()).length());
-			departmentWidth = Math.max(departmentWidth, String.valueOf(master.getDepartmentNumber()).length());
-		}
-
-		String format = String.format("%%-%ds  %%-%ds  %%-%ds  %%-%ds  %%-%ds  %%-%ds  %%-%ds\n",
-				nameWidth, addressWidth, phoneWidth, experienceWidth, statusWidth, brigadeWidth, departmentWidth);
-
-		sb.append(String.format(format, "Ім'я та прізвище", "Адреса", "Номер телефону", "Стаж", "Стан", "Номер бригади", "Номер відділення"));
-		sb.append(String.format(format, "-".repeat(nameWidth), "-".repeat(addressWidth),
-				"-".repeat(phoneWidth), "-".repeat(experienceWidth), "-".repeat(statusWidth), "-".repeat(brigadeWidth),
-				"-".repeat(departmentWidth)));
-
-		for (Master master : uniqueMasters.values()) {
-			sb.append(String.format(format,
-					master.getName(),
-					master.getAddress(),
-					master.getPhoneNumber(),
-					master.getExperience() + " років",
-					master.getStatus(),
-					master.getBrigade().getNumber(),
-					master.getDepartmentNumber()
-			));
-		}
-		resultArea.setText(sb.toString());
 	}
 
 	private void countClients() {
-		resultArea.setText("Кількість клієнтів: " + main.getClients().size());
+		try {
+			resultArea.setText("Кількість клієнтів: " + main.getClients().size());
+		} catch (SQLException e) {
+			showErrorOptionPane("Помилка підрахунку клієнтів: " + e.getMessage());
+		}
 	}
 
 	private void addClient() {
@@ -962,14 +957,12 @@ public class UserInterface {
 			int nextClientIndex = main.getNextClientIndex();
 
 			Client client = new Client(nextClientIndex, name, address, phoneNumber, departmentNumber);
-			main.getClients().add(client);
+			main.addClient(client);
 
-			main.saveAllData();
 			showSuccessOptionPane("Клієнта додано успішно!");
 			clearAddFields(FIELD_TYPES.CLIENT_FIELD);
-			populateClientComboBoxes();
-			populateAccidentComboBoxes();
-		} catch (IllegalArgumentException ex) {
+			populateAllComboBoxes();
+		} catch (IllegalArgumentException | SQLException ex) {
 			showErrorOptionPane("Помилка додавання клієнта: " + ex.getMessage());
 		}
 	}
@@ -981,14 +974,11 @@ public class UserInterface {
 			String clientName = (String) clientListNameField.getSelectedItem();
 			Client clientToRemove = main.getClientByName(clientName);
 			if (clientToRemove != null) {
-				main.dbManager.deleteClient(clientToRemove.getIndex());
-				main.getClients().remove(clientToRemove);
-
-				main.saveAllData();
-				showSuccessOptionPane("Клієнта \"" + clientName + "\" видалено успішно!");
+				main.deleteClient(clientToRemove.getIndex());
+				showSuccessOptionPane("Клієнта \"" + clientName + "\" та пов'язані аварії видалено успішно!");
+				clearAddFields(FIELD_TYPES.CLIENT_FIELD);
 				clearDeleteFields(FIELD_TYPES.CLIENT_FIELD);
-				populateClientComboBoxes();
-				populateAccidentComboBoxes();
+				populateAllComboBoxes();
 			} else {
 				showErrorOptionPane("Клієнта \"" + clientName + "\" не знайдено.");
 			}
@@ -999,78 +989,74 @@ public class UserInterface {
 
 	private void updateClient() {
 		try {
-			validateField(addClientNameField, "Ім'я та прізвище");
-			validateField(addClientAddressField, "Адреса");
-			validateField(addClientPhoneField, "Номер телефону");
-			validateField(addClientDepartmentField, "Номер відділення");
 			validateField(clientListNameField, "Клієнт");
 
 			String clientName = (String) clientListNameField.getSelectedItem();
 			Client clientToUpdate = main.getClientByName(clientName);
 
-			if (clientToUpdate == null) {
-				int nextClientIndex = main.getNextClientIndex();
-				clientToUpdate = new Client(
-						nextClientIndex,
-						addClientNameField.getText(),
-						addClientAddressField.getText(),
-						addClientPhoneField.getText(),
-						Integer.parseInt((String) addClientDepartmentField.getSelectedItem())
-				);
-				main.getClients().add(clientToUpdate);
-			} else {
+			if (clientToUpdate != null) {
 				clientToUpdate.setName(addClientNameField.getText());
 				clientToUpdate.setAddress(addClientAddressField.getText());
 				clientToUpdate.setPhoneNumber(addClientPhoneField.getText());
 				clientToUpdate.setDepartmentNumber(Integer.parseInt((String) addClientDepartmentField.getSelectedItem()));
+				main.updateClient(clientToUpdate);
+				showSuccessOptionPane("Клієнта \"" + clientName + "\" оновлено успішно!");
+				clearAddFields(FIELD_TYPES.CLIENT_FIELD);
+				populateAllComboBoxes();
+			} else {
+				showErrorOptionPane("Клієнта не знайдено.");
 			}
-
-			main.saveAllData();
-			showSuccessOptionPane("Клієнта \"" + clientName + "\" оновлено успішно!");
-			clearAddFields(FIELD_TYPES.CLIENT_FIELD);
-			populateClientComboBoxes();
-			populateAccidentComboBoxes();
-		} catch (IllegalArgumentException ex) {
+		} catch (IllegalArgumentException | SQLException ex) {
 			showErrorOptionPane("Помилка оновлення клієнта: " + ex.getMessage());
 		}
 	}
 
 	private void listClients() {
-		StringBuilder sb = new StringBuilder("Список клієнтів\n");
+		try {
+			List<Client> clients = main.getClients();
+			StringBuilder sb = new StringBuilder("Список клієнтів\n");
+			if (clients.isEmpty()) {
+				sb.append("Немає клієнтів у базі даних.");
+				resultArea.setText(sb.toString());
+				return;
+			}
+			Map<Integer, Client> uniqueClients = new LinkedHashMap<>();
+			for (Client client : clients) {
+				uniqueClients.put(client.getIndex(), client);
+			}
 
-		Map<Integer, Client> uniqueClients = new LinkedHashMap<>();
-		for (Client client : main.getClients()) {
-			uniqueClients.put(client.getIndex(), client);
+			int nameWidth = "Ім'я та прізвище".length();
+			int addressWidth = "Адреса".length();
+			int phoneWidth = "Номер телефону".length();
+			int departmentWidth = "Номер відділення".length();
+
+			for (Client client : uniqueClients.values()) {
+				nameWidth = Math.max(nameWidth, client.getName().length());
+				addressWidth = Math.max(addressWidth, client.getAddress().length());
+				phoneWidth = Math.max(phoneWidth, client.getPhoneNumber().length());
+				departmentWidth = Math.max(departmentWidth, String.valueOf(client.getDepartmentNumber()).length());
+			}
+
+			String format = String.format("%%-%ds  %%-%ds  %%-%ds  %%-%ds\n",
+					nameWidth, addressWidth, phoneWidth, departmentWidth);
+
+			sb.append(String.format(format, "Ім'я та прізвище", "Адреса", "Номер телефону", "Номер відділення"));
+			sb.append(String.format(format, "-".repeat(nameWidth),
+					"-".repeat(addressWidth), "-".repeat(phoneWidth), "-".repeat(departmentWidth)));
+
+			for (Client client : uniqueClients.values()) {
+				sb.append(String.format(format,
+						client.getName(),
+						client.getAddress(),
+						client.getPhoneNumber(),
+						client.getDepartmentNumber()
+				));
+			}
+			resultArea.setText(sb.toString());
+
+		} catch (SQLException ex) {
+			showErrorOptionPane("Помилка завантаження списку клієнтів: " + ex.getMessage());
 		}
-
-		int nameWidth = "Ім'я та прізвище".length();
-		int addressWidth = "Адреса".length();
-		int phoneWidth = "Номер телефону".length();
-		int departmentWidth = "Номер відділення".length();
-
-		for (Client client : uniqueClients.values()) {
-			nameWidth = Math.max(nameWidth, client.getName().length());
-			addressWidth = Math.max(addressWidth, client.getAddress().length());
-			phoneWidth = Math.max(phoneWidth, client.getPhoneNumber().length());
-			departmentWidth = Math.max(departmentWidth, String.valueOf(client.getDepartmentNumber()).length());
-		}
-
-		String format = String.format("%%-%ds  %%-%ds  %%-%ds  %%-%ds\n",
-				nameWidth, addressWidth, phoneWidth, departmentWidth);
-
-		sb.append(String.format(format, "Ім'я та прізвище", "Адреса", "Номер телефону", "Номер відділення"));
-		sb.append(String.format(format, "-".repeat(nameWidth),
-				"-".repeat(addressWidth), "-".repeat(phoneWidth), "-".repeat(departmentWidth)));
-
-		for (Client client : uniqueClients.values()) {
-			sb.append(String.format(format,
-					client.getName(),
-					client.getAddress(),
-					client.getPhoneNumber(),
-					client.getDepartmentNumber()
-			));
-		}
-		resultArea.setText(sb.toString());
 	}
 
 	private void countAccidents() {
@@ -1112,11 +1098,6 @@ public class UserInterface {
 	private void addAccident() {
 		try {
 			validateField(addAccidentDateField, "Дата");
-			validateField(addAccidentAddressField, "Адреса");
-			validateField(addAccidentTypeField, "Тип аварії");
-			validateField(addAccidentCostField, "Вартість");
-			validateField(addAccidentStatusField, "Стан");
-			validateField(addAccidentBrigadeField, "Номер бригади");
 			validateField(accidentClientPhoneNumberField, "Номер телефону клієнта");
 
 			Date date = parseDate(addAccidentDateField.getText());
@@ -1132,14 +1113,11 @@ public class UserInterface {
 
 			Brigade brigade = new Brigade(brigadeNumber);
 			Accident accident = new Accident(newIndex, address, type, cost, date, brigade, status, accidentClientPhoneNumber, newClientAccidentIndex);
-			main.getAccidents().add(accident);
-			main.saveAllData();
+			main.addAccident(accident);
 			showSuccessOptionPane("Аварію додано успішно!");
 			clearAddFields(FIELD_TYPES.ACCIDENT_FIELD);
-			populateAccidentComboBoxes();
-			populateClientComboBoxes();
-			populateClientAccidentIndexComboBox(accidentClientPhoneNumber);
-		} catch (IllegalArgumentException ex) {
+			populateAllComboBoxes();
+		} catch (IllegalArgumentException | SQLException ex) {
 			showErrorOptionPane("Помилка додавання аварії: " + ex.getMessage());
 		}
 	}
@@ -1150,20 +1128,18 @@ public class UserInterface {
 			validateField(accidentIndexField, "Iндекс аварії");
 
 			String accidentClientPhoneNumber = (String) accidentClientPhoneNumberField.getSelectedItem();
-			String accidentIndex = (String) accidentIndexField.getSelectedItem();
-			Accident accidentToRemove = main.getAccidentByPhoneNumAccIndex(accidentClientPhoneNumber, Integer.parseInt(accidentIndex));
-			if (accidentToRemove != null) {
-				main.dbManager.deleteAccident(Integer.parseInt(accidentIndex));
-				main.getAccidents().remove(accidentToRemove);
+			String accidentIndexStr = (String) accidentIndexField.getSelectedItem();
+			int accidentIndex = Integer.parseInt(accidentIndexStr);
+			Accident accidentToRemove = main.getAccidentByPhoneNumAccIndex(accidentClientPhoneNumber, accidentIndex);
 
-				main.saveAllData();
-				showSuccessOptionPane("Аварію з ID " + accidentIndex + " видалено успішно!");
+			if (accidentToRemove != null) {
+				main.deleteAccident(accidentToRemove.getIndex());
+				showSuccessOptionPane("Аварію з ID " + accidentToRemove.getIndex() + " видалено успішно!");
+				clearAddFields(FIELD_TYPES.ACCIDENT_FIELD);
 				clearDeleteFields(FIELD_TYPES.ACCIDENT_FIELD);
-				populateAccidentComboBoxes();
-				populateClientComboBoxes();
-				populateClientAccidentIndexComboBox(accidentClientPhoneNumber);
+				populateAllComboBoxes();
 			} else {
-				showErrorOptionPane("Аварію з ID " + accidentIndex + " не знайдено.");
+				showErrorOptionPane("Аварію не знайдено.");
 			}
 		} catch (SQLException | IllegalArgumentException ex) {
 			showErrorOptionPane("Помилка видалення аварії: " + ex.getMessage());
@@ -1172,93 +1148,90 @@ public class UserInterface {
 
 	private void updateAccident() {
 		try {
-			validateField(addAccidentDateField, "Дата");
-			validateField(addAccidentAddressField, "Адреса");
-			validateField(addAccidentTypeField, "Тип аварії");
-			validateField(addAccidentCostField, "Вартість");
-			validateField(addAccidentStatusField, "Стан");
-			validateField(addAccidentBrigadeField, "Номер бригади");
 			validateField(accidentClientPhoneNumberField, "Номер телефону клієнта");
 			validateField(accidentIndexField, "Індекс аварії");
 
 			String accidentClientPhoneNumber = (String) accidentClientPhoneNumberField.getSelectedItem();
-			String accidentId = (String) accidentIndexField.getSelectedItem();
-			Accident accidentToUpdate = main.getAccidentByPhoneNumAccIndex(accidentClientPhoneNumber, Integer.parseInt(accidentId));
-			if (accidentToUpdate != null) {
-				Date date = parseDate(addAccidentDateField.getText());
-				String address = addAccidentAddressField.getText();
-				String type = (String) addAccidentTypeField.getSelectedItem();
-				double cost = Double.parseDouble(addAccidentCostField.getText());
-				String status = (String) addAccidentStatusField.getSelectedItem();
-				int brigadeNumber = Integer.parseInt((String) addAccidentBrigadeField.getSelectedItem());
+			String accidentIdStr = (String) accidentIndexField.getSelectedItem();
+			int accidentId = Integer.parseInt(accidentIdStr);
+			Accident accidentToUpdate = main.getAccidentByPhoneNumAccIndex(accidentClientPhoneNumber, accidentId);
 
-				accidentToUpdate.setDate(date);
-				accidentToUpdate.setAddress(address);
-				accidentToUpdate.setType(type);
-				accidentToUpdate.setCost(cost);
-				accidentToUpdate.setStatus(status);
-				accidentToUpdate.setBrigade(new Brigade(brigadeNumber));
+			if (accidentToUpdate != null) {
+				accidentToUpdate.setDate(parseDate(addAccidentDateField.getText()));
+				accidentToUpdate.setAddress(addAccidentAddressField.getText());
+				accidentToUpdate.setType((String) addAccidentTypeField.getSelectedItem());
+				accidentToUpdate.setCost(Double.parseDouble(addAccidentCostField.getText()));
+				accidentToUpdate.setStatus((String) addAccidentStatusField.getSelectedItem());
+				accidentToUpdate.setBrigade(new Brigade(Integer.parseInt((String) addAccidentBrigadeField.getSelectedItem())));
 				accidentToUpdate.setClientPhoneNumber(accidentClientPhoneNumber);
 
-				main.saveAllData();
-				showSuccessOptionPane("Аварію з ID " + accidentId + " оновлено успішно!");
+				main.updateAccident(accidentToUpdate);
+				showSuccessOptionPane("Аварію з ID " + accidentToUpdate.getIndex() + " оновлено успішно!");
 				clearAddFields(FIELD_TYPES.ACCIDENT_FIELD);
-				populateAccidentComboBoxes();
-				populateClientComboBoxes();
-				populateClientAccidentIndexComboBox(accidentClientPhoneNumber);
+				populateAllComboBoxes();
 			} else {
-				showErrorOptionPane("Аварію з ID " + accidentId + " не знайдено.");
+				showErrorOptionPane("Аварію не знайдено.");
 			}
-		} catch (IllegalArgumentException ex) {
+		} catch (IllegalArgumentException | SQLException ex) {
 			showErrorOptionPane("Помилка оновлення аварії: " + ex.getMessage());
 		}
 	}
 
 	private void listAccidents() {
-		StringBuilder sb = new StringBuilder("Список аварій\n");
+		try {
+			List<Accident> accidents = main.getAccidents();
+			StringBuilder sb = new StringBuilder("Список аварій\n");
+			if (accidents.isEmpty()) {
+				sb.append("Немає аварій в базі даних.");
+				resultArea.setText(sb.toString());
+				return;
+			}
+			Map<Integer, Accident> uniqueAccidents = new LinkedHashMap<>();
+			for (Accident accident : accidents) {
+				uniqueAccidents.put(accident.getIndex(), accident);
+			}
 
-		Map<Integer, Accident> uniqueAccidents = new LinkedHashMap<>();
-		for (Accident accident : main.getAccidents()) {
-			uniqueAccidents.put(accident.getIndex(), accident);
+			int phoneNumberWidth = "Номер телефону".length();
+			int dateWidth = "Дата".length();
+			int addressWidth = "Адреса".length();
+			int typeWidth = "Тип аварії".length();
+			int costWidth = "Вартість".length();
+			int statusWidth = "Стан".length();
+			int brigadeWidth = "Номер бригади".length();
+
+			for (Accident accident : uniqueAccidents.values()) {
+				phoneNumberWidth = Math.max(phoneNumberWidth, (accident.getClientPhoneNumber() + " (" + accident.getAccidentIndex() + ")").length());
+				dateWidth = Math.max(dateWidth, main.getDateFormat().format(accident.getDate()).length());
+				addressWidth = Math.max(addressWidth, accident.getAddress().length());
+				typeWidth = Math.max(typeWidth, accident.getType().length());
+				costWidth = Math.max(costWidth, (accident.getCost() + " грн").length());
+				statusWidth = Math.max(statusWidth, accident.getStatus().length());
+				brigadeWidth = Math.max(brigadeWidth, String.valueOf(accident.getBrigade().getNumber()).length());
+			}
+
+			String format = String.format("%%-%ds  %%-%ds  %%-%ds  %%-%ds  %%-%ds  %%-%ds  %%-%ds\n",
+					phoneNumberWidth, dateWidth, addressWidth, typeWidth, costWidth, statusWidth, brigadeWidth);
+
+			sb.append(String.format(format, "Номер телефону", "Дата", "Адреса", "Тип аварії", "Вартість", "Стан", "Номер бригади"));
+			sb.append(String.format(format, "-".repeat(phoneNumberWidth), "-".repeat(dateWidth), "-".repeat(addressWidth),
+					"-".repeat(typeWidth), "-".repeat(costWidth), "-".repeat(statusWidth), "-".repeat(brigadeWidth)));
+
+			for (Accident accident : uniqueAccidents.values()) {
+				sb.append(String.format(format,
+						accident.getClientPhoneNumber() + " (" + accident.getAccidentIndex() + ")",
+						main.getDateFormat().format(accident.getDate()),
+						accident.getAddress(),
+						accident.getType(),
+						accident.getCost() + " грн",
+						accident.getStatus(),
+						accident.getBrigade().getNumber()
+				));
+			}
+			resultArea.setText(sb.toString());
+
+		} catch (SQLException ex) {
+			showErrorOptionPane("Помилка завантаження списку аварій: " + ex.getMessage());
 		}
-
-		int phoneNumberWidth = "Номер телефону".length();
-		int dateWidth = "Дата".length();
-		int addressWidth = "Адреса".length();
-		int typeWidth = "Тип аварії".length();
-		int costWidth = "Вартість".length();
-		int statusWidth = "Стан".length();
-		int brigadeWidth = "Номер бригади".length();
-
-		for (Accident accident : uniqueAccidents.values()) {
-			phoneNumberWidth = Math.max(phoneNumberWidth, (accident.getClientPhoneNumber() + " (" + accident.getAccidentIndex() + ")").length());
-			dateWidth = Math.max(dateWidth, main.getDateFormat().format(accident.getDate()).length());
-			addressWidth = Math.max(addressWidth, accident.getAddress().length());
-			typeWidth = Math.max(typeWidth, accident.getType().length());
-			costWidth = Math.max(costWidth, (accident.getCost() + " грн").length());
-			statusWidth = Math.max(statusWidth, accident.getStatus().length());
-			brigadeWidth = Math.max(brigadeWidth, String.valueOf(accident.getBrigade().getNumber()).length());
-		}
-
-		String format = String.format("%%-%ds  %%-%ds  %%-%ds  %%-%ds  %%-%ds  %%-%ds  %%-%ds\n",
-				phoneNumberWidth, dateWidth, addressWidth, typeWidth, costWidth, statusWidth, brigadeWidth);
-
-		sb.append(String.format(format, "Номер телефону", "Дата", "Адреса", "Тип аварії", "Вартість", "Стан", "Номер бригади"));
-		sb.append(String.format(format, "-".repeat(phoneNumberWidth), "-".repeat(dateWidth), "-".repeat(addressWidth),
-				"-".repeat(typeWidth), "-".repeat(costWidth), "-".repeat(statusWidth), "-".repeat(brigadeWidth)));
-
-		for (Accident accident : uniqueAccidents.values()) {
-			sb.append(String.format(format,
-					accident.getClientPhoneNumber() + " (" + accident.getAccidentIndex() + ")",
-					main.getDateFormat().format(accident.getDate()),
-					accident.getAddress(),
-					accident.getType(),
-					accident.getCost() + " грн",
-					accident.getStatus(),
-					accident.getBrigade().getNumber()
-			));
-		}
-		resultArea.setText(sb.toString());
 	}
 
 	private void exitApplication() {
@@ -1269,22 +1242,9 @@ public class UserInterface {
 				JOptionPane.QUESTION_MESSAGE);
 
 		if (option == JOptionPane.YES_OPTION) {
-			main.saveAllData();
-			showSuccessOptionPane("Дані збережено!");
-		} else if (option == JOptionPane.NO_OPTION) {
-			return;
-		}
-
-		// Закриття зв'язку з БД
-		try {
 			main.dbManager.close();
-		} catch (SQLException ex) {
-			ex.printStackTrace();
-			showErrorOptionPane("Не вдалося закрити зв'язок з БД: " + ex.getMessage());
+			frame.dispose();
 		}
-
-		// Закриття вікна
-		frame.dispose();
 	}
 
 	private void validateField(JComponent field, String fieldName) {
@@ -1325,17 +1285,17 @@ public class UserInterface {
 
 	private void validateAddressField(JTextField field, String fieldName) {
 		String text = field.getText().trim();
-		if (!text.matches("[\\p{L}0-9\\s.]+")) {
-			throw new IllegalArgumentException("Поле " + fieldName + " може містити тільки літери, цифри, пробіли та крапки.");
+		if (!text.matches("[\\p{L}0-9\\s.,'-]+")) {
+			throw new IllegalArgumentException("Поле " + fieldName + " може містити тільки літери, цифри, пробіли, коми, крапки та тире.");
 		}
 	}
 
 	private void validateNumberField(JTextField field, String fieldName) {
 		String text = field.getText().trim();
-		for (char c : text.toCharArray()) {
-			if (Character.isLetter(c) || Character.isSpaceChar(c)) {
-				throw new IllegalArgumentException("Поле " + fieldName + " може містити тільки цифри.");
-			}
+		try {
+			Double.parseDouble(text);
+		} catch (NumberFormatException e) {
+			throw new IllegalArgumentException("Поле " + fieldName + " може містити тільки цифри.");
 		}
 	}
 
@@ -1347,71 +1307,76 @@ public class UserInterface {
 		JOptionPane.showMessageDialog(frame, message, "Помилка", JOptionPane.ERROR_MESSAGE);
 	}
 
+	public void populateAllComboBoxes() {
+		populateMasterComboBoxes();
+		populateClientComboBoxes();
+		populateAccidentComboBoxes();
+	}
+
 	public void populateMasterComboBoxes() {
-		String[] masterNames = main.getMasters().stream()
-				.map(Master::getName)
-				.sorted()
-				.toArray(String[]::new);
+		try {
+			String[] masterNames = main.getMasters().stream()
+					.map(Master::getName)
+					.sorted()
+					.toArray(String[]::new);
+			masterListNameField.setModel(new DefaultComboBoxModel<>(masterNames));
 
-		masterListNameField.setModel(new DefaultComboBoxModel<>(masterNames));
+			String[] brigadeNumbers = Main.getBrigadeAndDepartmentNumbers().toArray(new String[0]);
+			addMasterBrigadeField.setModel(new DefaultComboBoxModel<>(brigadeNumbers));
+			String[] departmentNumbers = Main.getBrigadeAndDepartmentNumbers().toArray(new String[0]);
+			addMasterDepartmentField.setModel(new DefaultComboBoxModel<>(departmentNumbers));
 
-		String[] brigadeNumbers = Main.getBrigadeAndDepartmentNumbers().toArray(new String[0]);
-		addMasterBrigadeField.setModel(new DefaultComboBoxModel<>(brigadeNumbers));
-
-		String[] departmentNumbers = Main.getBrigadeAndDepartmentNumbers().toArray(new String[0]);
-		addMasterDepartmentField.setModel(new DefaultComboBoxModel<>(departmentNumbers));
+		} catch (SQLException e) {
+			showErrorOptionPane("Помилка завантаження даних для майстрів: " + e.getMessage());
+		}
 	}
 
 	public void populateAccidentComboBoxes() {
-		Set<String> uniqueIds = new HashSet<>();
+		try {
+			String[] brigadeNumbers = main.getUsedBrigadeNumbers().toArray(new String[0]);
+			String[] accidentTypes = Main.getAccidentTypes().toArray(new String[0]);
 
-		for (Accident accident : main.getAccidents()) {
-			String id = String.valueOf(accident.getIndex());
-			uniqueIds.add(id);
+			addAccidentTypeField.setModel(new DefaultComboBoxModel<>(accidentTypes));
+			addAccidentBrigadeField.setModel(new DefaultComboBoxModel<>(brigadeNumbers));
+
+			populateAccidentClientPhoneNumberComboBox();
+		} catch (Exception e) {
+			showErrorOptionPane("Помилка завантаження даних для аварій: " + e.getMessage());
 		}
-
-		List<String> sortedIds = new ArrayList<>(uniqueIds);
-		sortedIds.sort(Comparator.comparing(id -> id));
-
-		accidentIndexField.setModel(new DefaultComboBoxModel<>(sortedIds.toArray(new String[0])));
-
-		String[] brigadeNumbers = main.getUsedBrigadeNumbers().toArray(new String[0]);
-		String[] accidentTypes = Main.getAccidentTypes().toArray(new String[0]);
-
-		addAccidentTypeField.setModel(new DefaultComboBoxModel<>(accidentTypes));
-		addAccidentBrigadeField.setModel(new DefaultComboBoxModel<>(brigadeNumbers));
-
-		populateAccidentClientPhoneNumberComboBox();
 	}
 
 	public void populateClientComboBoxes() {
-		Set<String> uniqueIds = new HashSet<>();
+		try {
+			String[] clientNames = main.getClients().stream()
+					.map(Client::getName)
+					.sorted()
+					.toArray(String[]::new);
+			clientListNameField.setModel(new DefaultComboBoxModel<>(clientNames));
 
-		for (Client client : main.getClients()) {
-			uniqueIds.add(client.getName());
+			String[] departmentNumbers = main.getUsedDepartmentNumbers().toArray(new String[0]);
+			addClientDepartmentField.setModel(new DefaultComboBoxModel<>(departmentNumbers));
+		} catch (SQLException e) {
+			showErrorOptionPane("Помилка завантаження даних для клієнтів: " + e.getMessage());
 		}
-
-		List<String> sortedIds = new ArrayList<>(uniqueIds);
-		sortedIds.sort(Comparator.comparing(name -> name));
-
-		clientListNameField.setModel(new DefaultComboBoxModel<>(sortedIds.toArray(new String[0])));
-
-		String[] departmentNumbers = main.getUsedDepartmentNumbers().toArray(new String[0]);
-		addClientDepartmentField.setModel(new DefaultComboBoxModel<>(departmentNumbers));
 	}
 
 	public void populateAccidentClientPhoneNumberComboBox() {
-		Set<String> phoneNumbers = new HashSet<>();
-		for (Client client : main.getClients()) {
-			phoneNumbers.add(client.getPhoneNumber());
+		try {
+			String[] phoneNumbers = main.getClients().stream()
+					.map(Client::getPhoneNumber)
+					.sorted()
+					.toArray(String[]::new);
+			accidentClientPhoneNumberField.setModel(new DefaultComboBoxModel<>(phoneNumbers));
+		} catch (SQLException e) {
+			showErrorOptionPane("Помилка завантаження номерів телефонів: " + e.getMessage());
 		}
-
-		List<String> sortedNumbers = new ArrayList<>(phoneNumbers);
-		Collections.sort(sortedNumbers);
-		accidentClientPhoneNumberField.setModel(new DefaultComboBoxModel<>(sortedNumbers.toArray(new String[0])));
 	}
 
-	private void populateClientAccidentIndexComboBox(String phoneNumber) {
+	public void populateClientAccidentIndexComboBox(String phoneNumber) {
+		if (phoneNumber == null || phoneNumber.isEmpty()) {
+			accidentIndexField.setModel(new DefaultComboBoxModel<>());
+			return;
+		}
 		List<Integer> indices = main.getAccidentIndicesForClient(phoneNumber);
 		String[] indexArray = indices.stream()
 				.map(String::valueOf)
@@ -1420,44 +1385,55 @@ public class UserInterface {
 	}
 
 	public void loadMasterData(String masterName) {
-		Master master = main.getMasterByName(masterName);
-		if (master != null) {
-			addMasterNameField.setText(master.getName());
-			addMasterAddressField.setText(master.getAddress());
-			addMasterPhoneField.setText(master.getPhoneNumber());
-			addMasterExperienceField.setText(String.valueOf(master.getExperience()));
-			addMasterStatusField.setSelectedItem(master.getStatus());
-			addMasterBrigadeField.setSelectedItem(String.valueOf(master.getBrigade().getNumber()));
-			addMasterDepartmentField.setSelectedItem(String.valueOf(master.getDepartmentNumber()));
-		} else {
-			clearAddFields(FIELD_TYPES.MASTER_FIELD);
+		try {
+			Master master = main.getMasterByName(masterName);
+			if (master != null) {
+				addMasterNameField.setText(master.getName());
+				addMasterAddressField.setText(master.getAddress());
+				addMasterPhoneField.setText(master.getPhoneNumber());
+				addMasterExperienceField.setText(String.valueOf(master.getExperience()));
+				addMasterStatusField.setSelectedItem(master.getStatus());
+				addMasterBrigadeField.setSelectedItem(String.valueOf(master.getBrigade().getNumber()));
+				addMasterDepartmentField.setSelectedItem(String.valueOf(master.getDepartmentNumber()));
+			} else {
+				clearAddFields(FIELD_TYPES.MASTER_FIELD);
+			}
+		} catch (SQLException e) {
+			showErrorOptionPane("Помилка завантаження даних майстра: " + e.getMessage());
 		}
 	}
 
 	public void loadClientData(String clientName) {
-		Client client = main.getClientByName(clientName);
-
-		if (client != null) {
-			addClientNameField.setText(client.getName());
-			addClientAddressField.setText(client.getAddress());
-			addClientPhoneField.setText(client.getPhoneNumber());
-			addClientDepartmentField.setSelectedItem(String.valueOf(client.getDepartmentNumber()));
-		} else {
-			clearAddFields(FIELD_TYPES.CLIENT_FIELD);
+		try {
+			Client client = main.getClientByName(clientName);
+			if (client != null) {
+				addClientNameField.setText(client.getName());
+				addClientAddressField.setText(client.getAddress());
+				addClientPhoneField.setText(client.getPhoneNumber());
+				addClientDepartmentField.setSelectedItem(String.valueOf(client.getDepartmentNumber()));
+			} else {
+				clearAddFields(FIELD_TYPES.CLIENT_FIELD);
+			}
+		} catch (SQLException e) {
+			showErrorOptionPane("Помилка завантаження даних клієнта: " + e.getMessage());
 		}
 	}
 
 	public void loadAccidentData(String clientPhoneNumber, int accidentIndex) {
-		Accident accident = main.getAccidentByPhoneNumAccIndex(clientPhoneNumber, accidentIndex);
-		if (accident != null) {
-			addAccidentDateField.setText(main.getDateFormat().format(accident.getDate()));
-			addAccidentAddressField.setText(accident.getAddress());
-			addAccidentTypeField.setSelectedItem(accident.getType());
-			addAccidentCostField.setText(String.valueOf(accident.getCost()));
-			addAccidentStatusField.setSelectedItem(accident.getStatus());
-			addAccidentBrigadeField.setSelectedItem(String.valueOf(accident.getBrigade().getNumber()));
-		} else {
-			clearAddFields(FIELD_TYPES.ACCIDENT_FIELD);
+		try {
+			Accident accident = main.getAccidentByPhoneNumAccIndex(clientPhoneNumber, accidentIndex);
+			if (accident != null) {
+				addAccidentDateField.setText(main.getDateFormat().format(accident.getDate()));
+				addAccidentAddressField.setText(accident.getAddress());
+				addAccidentTypeField.setSelectedItem(accident.getType());
+				addAccidentCostField.setText(String.valueOf(accident.getCost()));
+				addAccidentStatusField.setSelectedItem(accident.getStatus());
+				addAccidentBrigadeField.setSelectedItem(String.valueOf(accident.getBrigade().getNumber()));
+			} else {
+				clearAddFields(FIELD_TYPES.ACCIDENT_FIELD);
+			}
+		} catch (SQLException e) {
+			showErrorOptionPane("Помилка завантаження даних аварії: " + e.getMessage());
 		}
 	}
 }

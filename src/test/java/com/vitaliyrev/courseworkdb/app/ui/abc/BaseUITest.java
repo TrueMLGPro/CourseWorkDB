@@ -12,9 +12,12 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 
 import java.sql.SQLException;
-import java.util.*;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 
 @ExtendWith(GUITestExtension.class)
 public abstract class BaseUITest {
@@ -46,37 +49,45 @@ public abstract class BaseUITest {
 		}
 	}
 
-	protected void prepareTestData() {
-		List<Brigade> brigades = new ArrayList<>(List.of(
-				new Brigade(1)
-		));
-		List<Master> masters = new ArrayList<>(List.of(
-				new Master(1, "Валерій Іваненко", "вул. Молодіжна 12", "0987654320", 5, "Зайнятий", new Brigade(1), 1)
-		));
-		List<Client> clients = new ArrayList<>(List.of(
-				new Client(1, "Василь Стасенко", "вул. Приморська 43", "0987654321", 1)
-		));
-		List<Accident> accidents = new ArrayList<>(List.of(
-				new Accident(1, "вул. Приморська 43", "Крах крана", 150.0, new Date(125, Calendar.JUNE, 10), new Brigade(1), "У процесі", "0987654321", 1)
-		));
+	protected void prepareTestData() throws SQLException {
+		Brigade brigade1 = new Brigade(1);
+		Master master1 = new Master(1, "Валерій Іваненко", "вул. Молодіжна 12", "0987654320", 5, "Вільний", brigade1, 1);
+		Client client1 = new Client(1, "Василь Стасенко", "вул. Приморська 43", "0987654321", 1);
+		Accident accident1 = new Accident(1, "вул. Приморська 43", "Крах крана", 150.0, new Date(125, Calendar.JUNE, 10), brigade1, "У процесі", "0987654321", 1);
 
-		mainMock.setMasters(masters);
-		mainMock.setClients(clients);
-		mainMock.setAccidents(accidents);
+		List<Master> masters = List.of(master1);
+		List<Client> clients = List.of(client1);
+		List<Accident> accidents = List.of(accident1);
+		List<String> usedBrigadeNumbers = List.of("1");
+		List<String> usedDepartmentNumbers = List.of("1");
 
-		try {
-			Mockito.when(mockDbManager.loadExistingBrigades()).thenReturn(brigades);
-			Mockito.when(mockDbManager.loadMasters(any())).thenReturn(masters);
-			Mockito.when(mockDbManager.loadClients()).thenReturn(clients);
-			Mockito.when(mockDbManager.loadAccidents(any())).thenReturn(accidents);
-		} catch (SQLException e) {
-			e.printStackTrace();
-		}
+		Mockito.when(mainMock.getMasters()).thenReturn(masters);
+		Mockito.when(mainMock.getClients()).thenReturn(clients);
+		Mockito.when(mainMock.getAccidents()).thenReturn(accidents);
+		Mockito.when(mainMock.getMasterByName("Валерій Іваненко")).thenReturn(master1);
+		Mockito.when(mainMock.getClientByName("Василь Стасенко")).thenReturn(client1);
+		Mockito.when(mainMock.getClientPhoneNumbers()).thenReturn(List.of("0987654321"));
+		Mockito.when(mainMock.getAccidentByPhoneNumAccIndex("0987654321", 1)).thenReturn(accident1);
+		Mockito.when(mainMock.getUsedBrigadeNumbers()).thenReturn(usedBrigadeNumbers);
+		Mockito.when(mainMock.getUsedDepartmentNumbers()).thenReturn(usedDepartmentNumbers);
+		Mockito.when(mainMock.getAccidentIndicesForClient("0987654321")).thenReturn(List.of(1));
 
-		mainMock.loadAllData();
-		ui.populateMasterComboBoxes();
-		ui.populateClientComboBoxes();
-		ui.populateAccidentComboBoxes();
+		Mockito.doNothing().when(mainMock).addMaster(any(Master.class));
+		Mockito.doNothing().when(mainMock).updateMaster(any(Master.class));
+		Mockito.doNothing().when(mainMock).deleteMaster(any(Integer.class));
+		Mockito.doNothing().when(mainMock).addClient(any(Client.class));
+		Mockito.doNothing().when(mainMock).updateClient(any(Client.class));
+		Mockito.doNothing().when(mainMock).deleteClient(any(Integer.class));
+		Mockito.doNothing().when(mainMock).addAccident(any(Accident.class));
+		Mockito.doNothing().when(mainMock).updateAccident(any(Accident.class));
+		Mockito.doNothing().when(mainMock).deleteAccident(any(Integer.class));
+
+		Mockito.when(mainMock.getNextMasterIndex()).thenReturn(2);
+		Mockito.when(mainMock.getNextClientIndex()).thenReturn(2);
+		Mockito.when(mainMock.getNextAccidentIndex()).thenReturn(2);
+		Mockito.when(mainMock.getNextAccidentIndexForClient(anyString())).thenReturn(2);
+
+		ui.populateAllComboBoxes();
 	}
 
 	protected int getComboboxItemsCount(String comboName) {

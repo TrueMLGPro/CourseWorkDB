@@ -6,7 +6,6 @@ import java.util.Locale;
 
 // Клас "Аварія"
 public class Accident extends Entity {
-	private Client client;
 	// Дані аварії
 	private String address; // Адреса, де відбулася аварія
 	private String type; // Тип аварії

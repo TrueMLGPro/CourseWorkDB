@@ -7,7 +7,6 @@ import java.sql.*;
 import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.Date;
-import java.util.stream.Collectors;
 
 import com.vitaliyrev.courseworkdb.app.db.DatabaseManager;
 
@@ -19,9 +18,6 @@ public class Main {
 	private String password;
 	public static UserInterface userInterface; // Для тестів
 
-	private List<Master> masters; // Список майстрів
-	private List<Client> clients; // Список клієнтів
-	private List<Accident> accidents; // Список аварій
 	private final SimpleDateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy", Locale.UK); // Формат дати
 	private static final List<String> BRIGADE_AND_DEPARTMENT_NUMBERS = Arrays.asList("1", "2", "3", "4", "5"); // Номери бригад та відділів
 	private static final List<String> MASTER_STATUSES = Arrays.asList( // Стани майстрів
@@ -61,10 +57,9 @@ public class Main {
 		userInterface = new UserInterface(this);
 	}
 
-	// For tests
+	// Для тестів
 	public Main(DatabaseManager dbManager) {
 		this.dbManager = dbManager;
-		loadAllData();
 	}
 
 	public Main(String url, String user, String password) {
@@ -74,7 +69,6 @@ public class Main {
 
 		try {
 			this.dbManager = new DatabaseManager(url, user, password);
-			loadAllData();
 		} catch (SQLException e) {
 			e.printStackTrace();
 			JOptionPane.showMessageDialog(null, "Не вдалося приєднатись до бази даних: " + e.getMessage(), "Помилка", JOptionPane.ERROR_MESSAGE);
@@ -87,105 +81,99 @@ public class Main {
 			dbManager.close();
 		}
 		dbManager = new DatabaseManager(url, user, password);
-		loadAllData();
 	}
 
-	// Гетери для списків
-	public List<Master> getMasters() {
-		return masters;
+	// Гетери для даних
+	public List<Master> getMasters() throws SQLException {
+		return dbManager.loadMasters();
 	}
 
-	public List<Client> getClients() {
-		return clients;
+	public List<Client> getClients() throws SQLException {
+		return dbManager.loadClients();
 	}
 
-	public List<Accident> getAccidents() {
-		return accidents;
+	public List<Accident> getAccidents() throws SQLException {
+		return dbManager.loadAccidents();
 	}
 
 	public SimpleDateFormat getDateFormat() {
 		return dateFormat;
 	}
 
-	// Сеттери для списків
-	public void setMasters(List<Master> masters) {
-		this.masters = masters != null ? masters : new ArrayList<>();
-	}
-
-	public void setClients(List<Client> clients) {
-		this.clients = clients != null ? clients : new ArrayList<>();
-	}
-
-	public void setAccidents(List<Accident> accidents) {
-		this.accidents = accidents != null ? accidents : new ArrayList<>();
-	}
-
 	// Методи для отримання наступних індексів
-	public int getNextMasterIndex() {
-		if (masters.isEmpty()) {
-			return 1;
-		}
-		return masters.stream().mapToInt(Entity::getIndex).max().orElse(0) + 1;
+	public int getNextMasterIndex() throws SQLException {
+		return dbManager.getNextId("masters");
 	}
 
-	public int getNextAccidentIndex() {
-		if (accidents.isEmpty()) {
-			return 1;
-		}
-		return accidents.stream().mapToInt(Entity::getIndex).max().orElse(0) + 1;
+	public int getNextAccidentIndex() throws SQLException {
+		return dbManager.getNextId("accidents");
 	}
 
-	public int getNextClientIndex() {
-		if (clients.isEmpty()) {
-			return 1;
-		}
-		return clients.stream().mapToInt(Entity::getIndex).max().orElse(0) + 1;
+	public int getNextClientIndex() throws SQLException {
+		return dbManager.getNextId("clients");
 	}
 
-	public int getNextAccidentIndexForClient(String phoneNumber) {
-		int maxIndex = 0;
-		for (Accident accident : accidents) {
-			if (phoneNumber.equals(accident.getClientPhoneNumber()) &&
-					accident.getAccidentIndex() > maxIndex) {
-				maxIndex = accident.getAccidentIndex();
-			}
-		}
-		return maxIndex + 1;
+	public int getNextAccidentIndexForClient(String phoneNumber) throws SQLException {
+		return dbManager.getNextAccidentIndexForClient(phoneNumber);
+	}
+
+	// Операції управління даними, що викликають відповідні методи в DatabaseManager
+	public void addMaster(Master master) throws SQLException {
+		dbManager.saveMaster(master);
+	}
+
+	public void updateMaster(Master master) throws SQLException {
+		dbManager.saveMaster(master);
+	}
+
+	public void deleteMaster(int masterId) throws SQLException {
+		dbManager.deleteMaster(masterId);
+	}
+
+	public void addClient(Client client) throws SQLException {
+		dbManager.saveClient(client);
+	}
+
+	public void updateClient(Client client) throws SQLException {
+		dbManager.saveClient(client);
+	}
+
+	public void deleteClient(int clientId) throws SQLException {
+		dbManager.deleteClient(clientId);
+	}
+
+	public void addAccident(Accident accident) throws SQLException {
+		dbManager.saveAccident(accident);
+	}
+
+	public void updateAccident(Accident accident) throws SQLException {
+		dbManager.saveAccident(accident);
+	}
+
+	public void deleteAccident(int accidentId) throws SQLException {
+		dbManager.deleteAccident(accidentId);
 	}
 
 	// Обчислення заробітної плати майстра за період
 	public double getMasterSalaryBetweenDates(int masterIndex, Date startDate, Date endDate) {
-		double experienceBonusPerYear = 200.0;
-		double totalSalary = 0;
-
-		for (Accident accident : accidents) {
-			Date accidentDate = accident.getDate();
-			if (accidentDate != null && accidentDate.compareTo(startDate) >= 0 &&
-					accidentDate.compareTo(endDate) <= 0 && accident.getBrigade() != null) {
-
-				for (Master master : masters) {
-					if (master.getIndex() == masterIndex && master.getBrigade() != null &&
-							master.getBrigade().getNumber() == accident.getBrigade().getNumber()) {
-
-						double accidentCost = accident.getCost();
-						double experienceBonus = master.getExperience() * experienceBonusPerYear;
-						totalSalary += accidentCost + experienceBonus;
-					}
-				}
-			}
+		try {
+			return dbManager.getMasterSalaryBetweenDates(masterIndex, startDate, endDate);
+		} catch (SQLException e) {
+			e.printStackTrace();
+			showError("Помилка розрахунку зарплати: " + e.getMessage());
+			return 0;
 		}
-		return totalSalary;
 	}
 
 	// Кількість бригад
 	public int getBrigadeCount() {
-		Set<Integer> brigadeNumbers = new HashSet<>();
-		for (Master master : masters) {
-			if (master.getBrigade() != null) {
-				brigadeNumbers.add(master.getBrigade().getNumber());
-			}
+		try {
+			return dbManager.getBrigadeCount();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			showError("Помилка підрахунку бригад: " + e.getMessage());
+			return 0;
 		}
-		return brigadeNumbers.size();
 	}
 
 	// Кількість аварій за період
@@ -193,64 +181,57 @@ public class Main {
 		if (startDate == null || endDate == null) return 0;
 		if (startDate.after(endDate))
 			throw new IllegalArgumentException("Початкова дата не може бути більшою за кінцеву дату.");
-		int count = 0;
-		for (Accident accident : accidents) {
-			if (!accident.getDate().before(startDate) && !accident.getDate().after(endDate)) {
-				count++;
-			}
+		try {
+			return dbManager.getAccidentCountBetweenDates(startDate, endDate);
+		} catch (SQLException e) {
+			e.printStackTrace();
+			showError("Помилка підрахунку аварій: " + e.getMessage());
+			return 0;
 		}
-		return count;
 	}
 
 	// Середня вартість аварії
 	public double getAverageAccidentCost() {
-		if (accidents.isEmpty()) return 0;
-		double totalCost = 0;
-		for (Accident accident : accidents) {
-			totalCost += accident.getCost();
+		try {
+			return round(dbManager.getAverageAccidentCost(), 2);
+		} catch (SQLException e) {
+			e.printStackTrace();
+			showError("Помилка розрахунку середньої вартості: " + e.getMessage());
+			return 0;
 		}
-		return round(totalCost / accidents.size(), 2);
 	}
 
 	// Набір типів аварій
 	public Set<String> getExistingAccidentTypes() {
-		Set<String> types = new HashSet<>();
-		for (Accident accident : accidents) {
-			types.add(accident.getType());
+		try {
+			return dbManager.getExistingAccidentTypes();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			showError("Помилка отримання типів аварій: " + e.getMessage());
+			return new HashSet<>();
 		}
-		return types;
 	}
 
-	// Набір існуючих номерів бригад
+	// Список існуючих номерів бригад
 	public List<String> getUsedBrigadeNumbers() {
-		Set<Integer> brigadeNumbers = new HashSet<>();
-		for (Master master : masters) {
-			if (master.getBrigade() != null) {
-				brigadeNumbers.add(master.getBrigade().getNumber());
-			}
+		try {
+			return dbManager.getUsedBrigadeNumbers();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			showError("Помилка отримання номерів бригад: " + e.getMessage());
+			return new ArrayList<>();
 		}
-		for (Accident accident : accidents) {
-			if (accident.getBrigade() != null) {
-				brigadeNumbers.add(accident.getBrigade().getNumber());
-			}
-		}
-		List<String> numbers = new ArrayList<>();
-		for (Integer number : brigadeNumbers) {
-			numbers.add(number.toString());
-		}
-		return numbers;
 	}
 
+	// Список існуючих номерів відділів
 	public List<String> getUsedDepartmentNumbers() {
-		Set<Integer> departmentNumbers = new HashSet<>();
-		for (Master master : masters) {
-			departmentNumbers.add(master.getDepartmentNumber());
+		try {
+			return dbManager.getUsedDepartmentNumbers();
+		} catch (SQLException e) {
+			e.printStackTrace();
+			showError("Помилка отримання номерів відділів: " + e.getMessage());
+			return new ArrayList<>();
 		}
-		List<String> numbers = new ArrayList<>();
-		for (Integer number : departmentNumbers) {
-			numbers.add(number.toString());
-		}
-		return numbers;
 	}
 
 	// Номери бригад та відділів
@@ -273,105 +254,35 @@ public class Main {
 		return ACCIDENT_TYPES;
 	}
 
-	// Отримання майстра за індексом
-	public Master getMasterByIndex(int index) {
-		for (Master master : masters) {
-			if (master.getIndex() == index) {
-				return master;
-			}
-		}
-		return null;
+	// Методи отримання сутностей
+	public Master getMasterByName(String masterName) throws SQLException {
+		return dbManager.getMasterByName(masterName);
 	}
 
-	// Отримання майстра за ім'ям
-	public Master getMasterByName(String masterName) {
-		for (Master master : masters) {
-			if (master.getName().equals(masterName)) {
-				return master;
-			}
-		}
-		return null;
+	public Client getClientByName(String clientName) throws SQLException {
+		return dbManager.getClientByName(clientName);
 	}
 
-	// Отримання клієнта за ідентифікатором аварії
-	public Client getClientByPhoneNumber(String phoneNumber) {
-		for (Client client : clients) {
-			if (client.getPhoneNumber().equals(phoneNumber)) {
-				return client;
-			}
-		}
-		return null;
+	public List<String> getClientPhoneNumbers() {
+		return dbManager.getClientPhoneNumbers();
 	}
 
-	public Client getClientByName(String clientName) {
-		for (Client client : clients) {
-			if (client.getName().equals(clientName)) {
-				return client;
-			}
-		}
-		return null;
-	}
-
-	// Отримання аварії за номеров телефона клієнта та індексом аварії
-	public Accident getAccidentByPhoneNumAccIndex(String phoneNumber, int accidentIndex) {
-		for (Accident accident : accidents) {
-			if (phoneNumber.equals(accident.getClientPhoneNumber()) &&
-					accident.getAccidentIndex() == accidentIndex) {
-				return accident;
-			}
-		}
-		return null;
+	public Accident getAccidentByPhoneNumAccIndex(String phoneNumber, int accidentIndex) throws SQLException {
+		return dbManager.getAccidentByPhoneNumAccIndex(phoneNumber, accidentIndex);
 	}
 
 	public List<Integer> getAccidentIndicesForClient(String phoneNumber) {
-		return accidents.stream()
-				.filter(a -> phoneNumber.equals(a.getClientPhoneNumber()))
-				.map(Accident::getAccidentIndex)
-				.sorted()
-				.collect(Collectors.toList());
-	}
-
-	// Завантаження всіх даних
-	public void loadAllData() {
 		try {
-			List<Brigade> dbBrigades = dbManager.loadExistingBrigades();
-			Map<Integer, Brigade> brigadeMap = dbBrigades.stream()
-					.collect(Collectors.toMap(Brigade::getNumber, b -> b));
-
-			this.clients = dbManager.loadClients();
-			this.masters = dbManager.loadMasters(brigadeMap);
-			this.accidents = dbManager.loadAccidents(brigadeMap);
+			return dbManager.getAccidentIndicesForClient(phoneNumber);
 		} catch (SQLException e) {
 			e.printStackTrace();
-			JOptionPane.showMessageDialog(null, "Помилка при завантаженні даних з БД: " + e.getMessage(), "Помилка", JOptionPane.ERROR_MESSAGE);
+			showError("Помилка отримання індексів аварій: " + e.getMessage());
+			return new ArrayList<>();
 		}
 	}
 
-	// Збереження всіх даних
-	public void saveAllData() {
-		try {
-			// Collect brigade numbers
-			Set<Integer> brigadeNumbers = new HashSet<>();
-			if (masters != null) {
-				for (Master master : masters) {
-					brigadeNumbers.add(master.getBrigade().getNumber());
-				}
-			}
-			if (accidents != null) {
-				for (Accident accident : accidents) {
-					brigadeNumbers.add(accident.getBrigade().getNumber());
-				}
-			}
-
-			// Потрібно зберігати дані саме в цьому порядку
-			dbManager.saveExistingBrigades(brigadeNumbers);
-			if (clients != null) dbManager.saveClients(clients);
-			if (accidents != null) dbManager.saveAccidents(accidents);
-			if (masters != null) dbManager.saveMasters(masters);
-		} catch (SQLException e) {
-			e.printStackTrace();
-			JOptionPane.showMessageDialog(null, "Помилка при збереженні даних: " + e.getMessage(), "Помилка", JOptionPane.ERROR_MESSAGE);
-		}
+	private void showError(String message) {
+		JOptionPane.showMessageDialog(null, message, "Помилка", JOptionPane.ERROR_MESSAGE);
 	}
 
 	// Метод для округлення числа
@@ -383,7 +294,7 @@ public class Main {
 		return bd.doubleValue();
 	}
 
-	// SQL
+	// SQL запити
 	// 1
 	public String getMastersWithBrigadeInfo() {
 		return dbManager.executeResilientQuery(() -> {
