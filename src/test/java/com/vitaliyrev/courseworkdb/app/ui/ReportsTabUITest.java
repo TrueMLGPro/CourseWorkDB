@@ -8,6 +8,8 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mockito;
 
+import java.sql.SQLException;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 
@@ -15,7 +17,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 public class ReportsTabUITest extends BaseUITest {
 
 	@BeforeEach
-	void setUp() {
+	void setUp() throws SQLException {
 		prepareTestData();
 	}
 

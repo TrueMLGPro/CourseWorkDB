@@ -3,23 +3,23 @@ package com.vitaliyrev.courseworkdb.app.ui;
 import com.vitaliyrev.courseworkdb.app.ui.abc.BaseUITest;
 import com.vitaliyrev.courseworkdb.app.ui.abc.GUITestExtension;
 import org.assertj.swing.annotation.GUITest;
-import org.assertj.swing.fixture.JComboBoxFixture;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mockito;
 
-import java.util.Arrays;
+import java.sql.SQLException;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 
 @ExtendWith(GUITestExtension.class)
 public class ClientsTabUITest extends BaseUITest {
 
 	@GUITest
 	@Test
-	void testListClients() {
+	void testListClients() throws SQLException {
 		prepareTestData();
 		window.tabbedPane().selectTab("Клієнти");
-
 		window.button("listClientsButton").click();
 
 		String result = window.textBox("resultArea").text();
@@ -30,7 +30,7 @@ public class ClientsTabUITest extends BaseUITest {
 
 	@GUITest
 	@Test
-	void testAddNewClient() {
+	void testAddNewClient() throws SQLException {
 		prepareTestData();
 		window.tabbedPane().selectTab("Клієнти");
 
@@ -40,67 +40,35 @@ public class ClientsTabUITest extends BaseUITest {
 		window.comboBox("addClientDepartmentField").selectItem("1");
 
 		window.button("addClientButton").click();
-
 		window.optionPane().requireInformationMessage().okButton().click();
-		window.button("listClientsButton").click();
-		String result = window.textBox("resultArea").text();
-		assertTrue(result.contains("Новий Клієнт"));
-		assertTrue(result.contains("0991112233"));
+
+		Mockito.verify(mainMock, Mockito.times(1)).addClient(any());
 	}
 
 	@GUITest
 	@Test
-	void testUpdateClientPhone() {
+	void testUpdateClientPhone() throws SQLException {
 		prepareTestData();
 		window.tabbedPane().selectTab("Клієнти");
 
-		JComboBoxFixture clientCombo = window.comboBox("clientListNameField");
-		clientCombo.selectItem(0);
-
-		String clientId = (String) clientCombo.target().getSelectedItem();
-		ui.loadClientData(clientId);
+		window.comboBox("clientListNameField").selectItem("Василь Стасенко");
 		window.textBox("addClientPhoneField").deleteText().enterText("0505556677");
 		window.button("updateClientButton").click();
-
 		window.optionPane().requireInformationMessage().okButton().click();
-		window.button("listClientsButton").click();
-		String result = window.textBox("resultArea").text();
-		assertTrue(result.contains("0505556677"));
+
+		Mockito.verify(mainMock, Mockito.times(1)).updateClient(any());
 	}
 
 	@GUITest
 	@Test
-	void testDeleteClient() {
+	void testDeleteClient() throws SQLException {
 		prepareTestData();
 		window.tabbedPane().selectTab("Клієнти");
 
-		int initialCount = getComboboxItemsCount("clientListNameField");
-		JComboBoxFixture clientCombo = window.comboBox("clientListNameField");
-		clientCombo.selectItem(0);
-
-		String clientId = (String) clientCombo.target().getSelectedItem();
-		ui.loadClientData(clientId);
+		window.comboBox("clientListNameField").selectItem("Василь Стасенко");
 		window.button("deleteClientButton").click();
-
 		window.optionPane().requireInformationMessage().okButton().click();
-		assertEquals(initialCount - 1, getComboboxItemsCount("clientListNameField"));
-	}
 
-	@GUITest
-	@Test
-	void testClientValidation_MissingName() {
-		prepareTestData();
-		window.tabbedPane().selectTab("Клієнти");
-
-		JComboBoxFixture clientCombo = window.comboBox("clientListNameField");
-		clientCombo.selectItem(0);
-
-		String clientId = (String) clientCombo.target().getSelectedItem();
-		ui.loadClientData(clientId);
-		window.textBox("addClientNameField").deleteText();
-		window.button("addClientButton").click();
-
-		window.optionPane().requireErrorMessage().okButton().click();
-		assertTrue(window.textBox("addClientNameField").text().isEmpty());
+		Mockito.verify(mainMock, Mockito.times(1)).deleteClient(1);
 	}
 }

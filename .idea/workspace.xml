@@ -10,18 +10,15 @@
     <list default="true" id="95a69f16-a790-40cd-8ee2-a8de1e3cf5c5" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/vitaliyrev/courseworkdb/app/Accident.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/vitaliyrev/courseworkdb/app/Accident.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/com/vitaliyrev/courseworkdb/app/Client.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/vitaliyrev/courseworkdb/app/Client.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/vitaliyrev/courseworkdb/app/Main.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/vitaliyrev/courseworkdb/app/Main.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/vitaliyrev/courseworkdb/app/UserInterface.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/vitaliyrev/courseworkdb/app/UserInterface.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/com/vitaliyrev/courseworkdb/app/db/DatabaseManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/vitaliyrev/courseworkdb/app/db/DatabaseManager.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/AccidentTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/AccidentTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/ClientTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/ClientTest.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/MainTest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/MainTest.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/db/DatabaseManagerTestBase.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/db/DatabaseManagerTestBase.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/ui/AccidentsTabUITest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/ui/AccidentsTabUITest.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/ui/ClientsTabUITest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/ui/ClientsTabUITest.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/ui/ConnectionStatusUITest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/ui/ConnectionStatusUITest.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/ui/MastersTabUITest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/ui/MastersTabUITest.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/ui/ReportsTabUITest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/ui/ReportsTabUITest.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/ui/abc/BaseUITest.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/test/java/com/vitaliyrev/courseworkdb/app/ui/abc/BaseUITest.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -102,7 +99,7 @@
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="ProblemsViewState">
-    <option name="selectedTabId" value="CurrentFile" />
+    <option name="selectedTabId" value="ProjectErrors" />
   </component>
   <component name="ProjectColorInfo">{
   &quot;associatedIndex&quot;: 4
@@ -112,66 +109,68 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent"><![CDATA[{
-  "keyToString": {
-    "Application.Main.executor": "Run",
-    "Downloaded.Files.Path.Enabled": "false",
-    "Gradle.AccidentsTabUITest.executor": "Run",
-    "Gradle.AccidentsTabUITest.testAccidentReport.executor": "Run",
-    "Gradle.AccidentsTabUITest.testAccidentValidation_InvalidCost.executor": "Run",
-    "Gradle.AccidentsTabUITest.testAddAccident.executor": "Debug",
-    "Gradle.AccidentsTabUITest.testAddNewAccident.executor": "Run",
-    "Gradle.AccidentsTabUITest.testDeleteAccident.executor": "Run",
-    "Gradle.AccidentsTabUITest.testUpdateAccident.executor": "Run",
-    "Gradle.ClientsTabUITest.executor": "Run",
-    "Gradle.ClientsTabUITest.testDeleteClient.executor": "Run",
-    "Gradle.ClientsTabUITest.testListClients.executor": "Run",
-    "Gradle.ConnectionStatusUITest.testReconnectFlow.executor": "Debug",
-    "Gradle.CourseWorkDB [:com.vitaliyrev.courseworkdb.app.Main.main()].executor": "Run",
-    "Gradle.CourseWorkDB [assemble].executor": "Run",
-    "Gradle.CourseWorkDB [build].executor": "Run",
-    "Gradle.CourseWorkDB [check].executor": "Run",
-    "Gradle.CourseWorkDB [clean].executor": "Run",
-    "Gradle.CourseWorkDB [compileJava].executor": "Run",
-    "Gradle.CourseWorkDB [compileTestJava].executor": "Run",
-    "Gradle.CourseWorkDB [jar].executor": "Run",
-    "Gradle.CourseWorkDB [processResources].executor": "Run",
-    "Gradle.CourseWorkDB [run].executor": "Run",
-    "Gradle.CourseWorkDB [testClasses].executor": "Run",
-    "Gradle.CourseWorkDB [test].executor": "Run",
-    "Gradle.CourseWorkDB.executor": "Run",
-    "Gradle.D:/IDEA_Projects/Polytech/Databases/CourseWorkDB/build.gradle.executor": "Run",
-    "Gradle.Download Sources.executor": "Run",
-    "Gradle.MainTest.shouldCalculateMasterSalaryCorrectly.executor": "Debug",
-    "Gradle.MainTest.shouldCalculateSalaryForDateRange.executor": "Debug",
-    "Gradle.MainTest.shouldSaveAllDataWithMultipleEntries.executor": "Run",
-    "Gradle.MainTest.testFindClientsByNamePattern.executor": "Run",
-    "Gradle.MainTest.testGetInactiveBrigadesLeftJoin.executor": "Run",
-    "Gradle.MainTest.testGetTopBrigadePerAccidentType.executor": "Run",
-    "Gradle.MastersTabUITest.executor": "Run",
-    "Gradle.MastersTabUITest.testAddMaster.executor": "Run",
-    "Gradle.MastersTabUITest.testDeleteMaster.executor": "Run",
-    "Gradle.ReportsTabUITest.executor": "Run",
-    "Gradle.Tests in 'com.vitaliyrev.courseworkdb.app.ui'.executor": "Run",
-    "JAR Application.CourseWorkDB-1.0-SNAPSHOT.jar.executor": "Run",
-    "JUnit.All in CourseWorkDB.src.main.test (1).executor": "Run",
-    "JUnit.All in CourseWorkDB.src.main.test.executor": "Run",
-    "Repository.Attach.Annotations": "false",
-    "Repository.Attach.JavaDocs": "false",
-    "Repository.Attach.Sources": "false",
-    "RunOnceActivity.ShowReadmeOnStart": "true",
-    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
-    "git-widget-placeholder": "db",
-    "ignore.virus.scanning.warn.message": "true",
-    "kotlin-language-version-configured": "true",
-    "last_opened_file_path": "D:/IDEA_Projects/Polytech/Databases/CourseWorkDB",
-    "project.structure.last.edited": "Modules",
-    "project.structure.proportion": "0.15",
-    "project.structure.side.proportion": "0.2",
-    "run.code.analysis.last.selected.profile": "pProject Default",
-    "settings.editor.selected.configurable": "preferences.lookFeel"
+  <component name="PropertiesComponent">{
+  &quot;keyToString&quot;: {
+    &quot;Application.Main.executor&quot;: &quot;Run&quot;,
+    &quot;Downloaded.Files.Path.Enabled&quot;: &quot;false&quot;,
+    &quot;Gradle.AccidentsTabUITest.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.AccidentsTabUITest.testAccidentReport.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.AccidentsTabUITest.testAccidentValidation_InvalidCost.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.AccidentsTabUITest.testAddAccident.executor&quot;: &quot;Debug&quot;,
+    &quot;Gradle.AccidentsTabUITest.testAddNewAccident.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.AccidentsTabUITest.testDeleteAccident.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.AccidentsTabUITest.testUpdateAccident.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.ClientsTabUITest.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.ClientsTabUITest.testDeleteClient.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.ClientsTabUITest.testListClients.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.ConnectionStatusUITest.testReconnectFlow.executor&quot;: &quot;Debug&quot;,
+    &quot;Gradle.CourseWorkDB [:com.vitaliyrev.courseworkdb.app.Main.main()].executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.CourseWorkDB [assemble].executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.CourseWorkDB [build].executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.CourseWorkDB [check].executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.CourseWorkDB [clean].executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.CourseWorkDB [compileJava].executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.CourseWorkDB [compileTestJava].executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.CourseWorkDB [jar].executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.CourseWorkDB [processResources].executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.CourseWorkDB [run].executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.CourseWorkDB [testClasses].executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.CourseWorkDB [test].executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.CourseWorkDB.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.D:/IDEA_Projects/Polytech/Databases/CourseWorkDB/build.gradle.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.Download Sources.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.MainTest.shouldCalculateMasterSalaryCorrectly.executor&quot;: &quot;Debug&quot;,
+    &quot;Gradle.MainTest.shouldCalculateSalaryForDateRange.executor&quot;: &quot;Debug&quot;,
+    &quot;Gradle.MainTest.shouldSaveAllDataWithMultipleEntries.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.MainTest.testFindClientsByNamePattern.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.MainTest.testGetInactiveBrigadesLeftJoin.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.MainTest.testGetTopBrigadePerAccidentType.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.MastersTabUITest.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.MastersTabUITest.testAddMaster.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.MastersTabUITest.testDeleteMaster.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.ReportsTabUITest.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.Tests in 'com.vitaliyrev.courseworkdb.app'.executor&quot;: &quot;Run&quot;,
+    &quot;Gradle.Tests in 'com.vitaliyrev.courseworkdb.app.ui'.executor&quot;: &quot;Run&quot;,
+    &quot;JAR Application.CourseWorkDB-1.0-SNAPSHOT.jar.executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.All in CourseWorkDB.src.main.test (1).executor&quot;: &quot;Run&quot;,
+    &quot;JUnit.All in CourseWorkDB.src.main.test.executor&quot;: &quot;Run&quot;,
+    &quot;Repository.Attach.Annotations&quot;: &quot;false&quot;,
+    &quot;Repository.Attach.JavaDocs&quot;: &quot;false&quot;,
+    &quot;Repository.Attach.Sources&quot;: &quot;false&quot;,
+    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
+    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
+    &quot;git-widget-placeholder&quot;: &quot;db&quot;,
+    &quot;ignore.virus.scanning.warn.message&quot;: &quot;true&quot;,
+    &quot;kotlin-language-version-configured&quot;: &quot;true&quot;,
+    &quot;last_opened_file_path&quot;: &quot;D:/IDEA_Projects/Polytech/Databases/CourseWorkDB/src/test/java/com/vitaliyrev/courseworkdb/app/MainTestNew.java&quot;,
+    &quot;project.structure.last.edited&quot;: &quot;Modules&quot;,
+    &quot;project.structure.proportion&quot;: &quot;0.15&quot;,
+    &quot;project.structure.side.proportion&quot;: &quot;0.2&quot;,
+    &quot;run.code.analysis.last.selected.profile&quot;: &quot;pProject Default&quot;,
+    &quot;settings.editor.selected.configurable&quot;: &quot;preferences.lookFeel&quot;,
+    &quot;two.files.diff.last.used.file&quot;: &quot;D:/IDEA_Projects/Polytech/Databases/CourseWorkDB/src/test/java/com/vitaliyrev/courseworkdb/app/MainTestNew.java&quot;
   }
-}]]></component>
+}</component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
       <recent name="D:\IDEA_Projects\Polytech\Databases\CourseWorkDB\src\main\test" />
@@ -227,30 +226,6 @@
       <RunAsTest>true</RunAsTest>
       <method v="2" />
     </configuration>
-    <configuration name="ConnectionStatusUITest.testReconnectFlow" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
-      <ExternalSystemSettings>
-        <option name="executionName" />
-        <option name="externalProjectPath" value="$PROJECT_DIR$" />
-        <option name="externalSystemIdString" value="GRADLE" />
-        <option name="scriptParameters" value="" />
-        <option name="taskDescriptions">
-          <list />
-        </option>
-        <option name="taskNames">
-          <list>
-            <option value=":test" />
-            <option value="--tests" />
-            <option value="&quot;com.vitaliyrev.courseworkdb.app.ui.ConnectionStatusUITest.testReconnectFlow&quot;" />
-          </list>
-        </option>
-        <option name="vmOptions" />
-      </ExternalSystemSettings>
-      <ExternalSystemDebugServerProcess>false</ExternalSystemDebugServerProcess>
-      <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
-      <DebugAllEnabled>false</DebugAllEnabled>
-      <RunAsTest>true</RunAsTest>
-      <method v="2" />
-    </configuration>
     <configuration name="CourseWorkDB [run]" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
       <ExternalSystemSettings>
         <option name="executionName" />
@@ -295,6 +270,30 @@
       <RunAsTest>false</RunAsTest>
       <method v="2" />
     </configuration>
+    <configuration name="Tests in 'com.vitaliyrev.courseworkdb.app'" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
+      <ExternalSystemSettings>
+        <option name="executionName" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="externalSystemIdString" value="GRADLE" />
+        <option name="scriptParameters" value="" />
+        <option name="taskDescriptions">
+          <list />
+        </option>
+        <option name="taskNames">
+          <list>
+            <option value=":test" />
+            <option value="--tests" />
+            <option value="&quot;com.vitaliyrev.courseworkdb.app.*&quot;" />
+          </list>
+        </option>
+        <option name="vmOptions" />
+      </ExternalSystemSettings>
+      <ExternalSystemDebugServerProcess>false</ExternalSystemDebugServerProcess>
+      <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
+      <DebugAllEnabled>false</DebugAllEnabled>
+      <RunAsTest>true</RunAsTest>
+      <method v="2" />
+    </configuration>
     <configuration default="true" type="JetRunConfigurationType">
       <module name="CourseWorkDB" />
       <method v="2">
@@ -311,17 +310,17 @@
     <list>
       <item itemvalue="Gradle.AccidentsTabUITest" />
       <item itemvalue="Gradle.AccidentsTabUITest.testAddNewAccident" />
-      <item itemvalue="Gradle.ConnectionStatusUITest.testReconnectFlow" />
+      <item itemvalue="Gradle.Tests in 'com.vitaliyrev.courseworkdb.app'" />
       <item itemvalue="Gradle.CourseWorkDB [test]" />
       <item itemvalue="Gradle.CourseWorkDB [run]" />
     </list>
     <recent_temporary>
       <list>
         <item itemvalue="Gradle.CourseWorkDB [run]" />
-        <item itemvalue="Gradle.CourseWorkDB [test]" />
+        <item itemvalue="Gradle.Tests in 'com.vitaliyrev.courseworkdb.app'" />
         <item itemvalue="Gradle.AccidentsTabUITest" />
-        <item itemvalue="Gradle.ConnectionStatusUITest.testReconnectFlow" />
         <item itemvalue="Gradle.AccidentsTabUITest.testAddNewAccident" />
+        <item itemvalue="Gradle.CourseWorkDB [test]" />
       </list>
     </recent_temporary>
   </component>
